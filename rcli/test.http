@@ -1,0 +1,12 @@
+### test index
+
+GET http://127.0.0.1:8080/abc.txt
+
+
+### test tower
+GET http://127.0.0.1:8080/fixtures
+Accept-Encoding: zstd
+
+### test tower
+GET http://127.0.0.1:8080/target/CACHEDIR.TAG
+Accept-Encoding: zstd
