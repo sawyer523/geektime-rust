@@ -28,7 +28,7 @@ pub fn process_decode(input: &str, format: Base64Format) -> Result<Vec<u8>> {
         Base64Format::Standard => STANDARD.decode(buf)?,
         Base64Format::Url => URL_SAFE_NO_PAD.decode(buf)?,
     };
-    // TODO: decoded data might not be string (but for this example, we assume it is)
+    // TODO: decoded data might not be string (but for this examples, we assume it is)
     Ok(decoded)
 }
 
