@@ -26,20 +26,42 @@ impl TryFrom<RespArray> for Echo {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
+    use bytes::BytesMut;
 
+    use crate::RespDecode;
+
+    use super::*;
+
+    // test the echo command
     #[test]
-    fn test_echo_encode() {
-        // let frame: RespFrame = Echo::try_from("Hello, world!".to_string()).into();
-        //
-        // assert_eq!(frame.encode(), b"+Hello, world!\r\n");
+    fn test_echo() -> Result<()> {
+        use super::*;
+        use crate::RespFrame;
+
+        let echo = Echo {
+            value: "hello".to_string(),
+        };
+
+        let frame = echo.execute(&Backend::default());
+        assert_eq!(
+            frame,
+            RespFrame::SimpleString(SimpleString::new("\"hello\""))
+        );
+
+        Ok(())
     }
 
+    // test decode
     #[test]
     fn test_echo_decode() -> Result<()> {
-        // let mut buf = BytesMut::from("+Hello, world!\r\n");
-        // let frame = Echo::decode(&mut buf)?;
-        //
-        // assert_eq!(frame.value, "Hello, world!");
+        let mut buf = BytesMut::new();
+        buf.extend_from_slice(b"*2\r\n$4\r\necho\r\n$5\r\nhello\r\n");
+
+        let frame = RespArray::decode(&mut buf)?;
+
+        let cmd: Echo = frame.try_into()?;
+
+        assert_eq!(cmd.value, "hello");
 
         Ok(())
     }

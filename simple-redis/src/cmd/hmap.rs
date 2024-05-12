@@ -254,4 +254,82 @@ mod tests {
         assert_eq!(result, expected.into());
         Ok(())
     }
+
+    #[test]
+    fn test_hmset_try_from_array() -> Result<()> {
+        let mut buf = BytesMut::new();
+        buf.extend_from_slice(b"*12\r\n$5\r\nhmset\r\n$6\r\nmyhash\r\n$1\r\n1\r\n$1\r\n2\r\n$1\r\n3\r\n$1\r\n4\r\n$1\r\n5\r\n$1\r\n6\r\n$1\r\n7\r\n$1\r\n8\r\n$1\r\n9\r\n$2\r\n10\r\n");
+        let frame = RespArray::decode(&mut buf)?;
+        let result = HMSet::try_from(frame)?;
+        assert_eq!(result.key, "myhash");
+        let fields = result.fields.0.unwrap();
+        assert_eq!(fields.len(), 10);
+        assert_eq!(fields[0], RespFrame::BulkString(b"1".into()));
+        assert_eq!(fields[1], RespFrame::BulkString(b"2".into()));
+        assert_eq!(fields[2], RespFrame::BulkString(b"3".into()));
+        assert_eq!(fields[3], RespFrame::BulkString(b"4".into()));
+        assert_eq!(fields[4], RespFrame::BulkString(b"5".into()));
+        assert_eq!(fields[5], RespFrame::BulkString(b"6".into()));
+        assert_eq!(fields[6], RespFrame::BulkString(b"7".into()));
+        assert_eq!(fields[7], RespFrame::BulkString(b"8".into()));
+        assert_eq!(fields[8], RespFrame::BulkString(b"9".into()));
+        assert_eq!(fields[9], RespFrame::BulkString(b"10".into()));
+        Ok(())
+    }
+
+    #[test]
+    fn test_hmget_try_from_array() -> Result<()> {
+        let mut buf = BytesMut::new();
+        buf.extend_from_slice(b"*3\r\n$5\r\nhmget\r\n$6\r\nmyhash\r\n$1\r\n1\r\n");
+        let frame = RespArray::decode(&mut buf)?;
+        let result = HMGet::try_from(frame)?;
+        assert_eq!(result.key, "myhash");
+        let fields = result.fields.0.unwrap();
+        assert_eq!(fields.len(), 1);
+        assert_eq!(fields[0], RespFrame::BulkString(b"1".into()));
+        Ok(())
+    }
+
+    #[test]
+    fn test_hmset_hmget_commands() -> Result<()> {
+        let backend = crate::Backend::new();
+        let cmd = HMSet {
+            key: "myhash".to_string(),
+            fields: RespArray(Some(vec![
+                RespFrame::BulkString(b"1".into()),
+                RespFrame::BulkString(b"2".into()),
+                RespFrame::BulkString(b"3".into()),
+                RespFrame::BulkString(b"4".into()),
+                RespFrame::BulkString(b"5".into()),
+                RespFrame::BulkString(b"6".into()),
+                RespFrame::BulkString(b"7".into()),
+                RespFrame::BulkString(b"8".into()),
+                RespFrame::BulkString(b"9".into()),
+                RespFrame::BulkString(b"10".into()),
+            ])),
+        };
+        let result = cmd.execute(&backend);
+        assert_eq!(result, RESP_OK.clone());
+
+        let cmd = HMGet {
+            key: "myhash".to_string(),
+            fields: RespArray(Some(vec![
+                RespFrame::BulkString(b"1".into()),
+                RespFrame::BulkString(b"3".into()),
+                RespFrame::BulkString(b"5".into()),
+                RespFrame::BulkString(b"7".into()),
+                RespFrame::BulkString(b"9".into()),
+            ])),
+        };
+        let result = cmd.execute(&backend);
+        let expected = RespArray::new([
+            RespFrame::BulkString(b"2".into()),
+            RespFrame::BulkString(b"4".into()),
+            RespFrame::BulkString(b"6".into()),
+            RespFrame::BulkString(b"8".into()),
+            RespFrame::BulkString(b"10".into()),
+        ]);
+        assert_eq!(result, expected.into());
+        Ok(())
+    }
 }
