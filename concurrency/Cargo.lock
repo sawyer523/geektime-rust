@@ -82,7 +82,9 @@ name = "concurrency"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "dashmap",
+ "enum_dispatch",
  "oneshot",
  "rand",
  "tokio",
@@ -101,6 +103,18 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core",
+]
+
+[[package]]
+name = "enum_dispatch"
+version = "0.3.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa18ce2bc66555b3218614519ac839ddb759a7d6720732f979ef8d13be147ecd"
+dependencies = [
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

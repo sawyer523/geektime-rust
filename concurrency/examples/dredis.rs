@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
         let (stream, raddr) = listener.accept().await?;
         info!("Accepted connection from: {}", raddr);
         tokio::spawn(async move {
-            if let Err(e) = process_redis_conn(stream).await {
+            if let Err(e) = process_redis_conn(stream, raddr).await {
                 warn!("Error processing conn with {}: {:?}", raddr, e);
             }
         });
