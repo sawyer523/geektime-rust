@@ -137,7 +137,12 @@ impl TryFrom<RespArray> for HMSet {
     type Error = CommandError;
 
     fn try_from(value: RespArray) -> std::result::Result<Self, Self::Error> {
-        validate_command(&value, &["hmset"], value.0.iter().len() - 1)?;
+        validate_command(&value, &["hmset"], value.0.as_ref().unwrap().len() - 1)?;
+        if value.0.as_ref().unwrap().len() % 2 != 0 {
+            return Err(CommandError::InvalidArgument(
+                "Invalid argument".to_string(),
+            ));
+        }
         let mut args = extract_args(value, 1)?.into_iter();
         match args.next() {
             Some(RespFrame::BulkString(k)) => Ok(HMSet {
@@ -155,7 +160,7 @@ impl TryFrom<RespArray> for HMGet {
     type Error = CommandError;
 
     fn try_from(value: RespArray) -> std::result::Result<Self, Self::Error> {
-        validate_command(&value, &["hmget"], value.0.iter().len() - 1)?;
+        validate_command(&value, &["hmget"], value.0.as_ref().unwrap().len() - 1)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match args.next() {
             Some(RespFrame::BulkString(k)) => Ok(HMGet {

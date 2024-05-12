@@ -7,8 +7,9 @@ use tracing::info;
 
 use crate::{
     Backend,
-    cmd::{Command, CommandExecutor}, RespDecode, RespEncode, RespError, RespFrame,
+    cmd::{Command, CommandExecutor}, RespDecode, RespEncode, RespError, RespFrame, SimpleString,
 };
+use crate::cmd::CommandError;
 
 #[derive(Debug)]
 struct RespFrameCodec;
@@ -34,9 +35,26 @@ pub async fn stream_handler(stream: TcpStream, backend: Backend) -> Result<()> {
                     frame,
                     backend: backend.clone(),
                 };
-                let response = requst_handler(request).await?;
-                info!("Sending response: {:?}", response.frame);
-                framed.send(response.frame).await?;
+                match requst_handler(request).await {
+                    Ok(response) => {
+                        info!("Sending response: {:?}", response.frame);
+                        framed.send(response.frame).await?;
+                    }
+                    Err(e) => {
+                        if let Some(CommandError::InvalidArgument(_)) =
+                            e.downcast_ref::<CommandError>()
+                        {
+                            let response = RedisResponse {
+                                frame: RespFrame::SimpleString(SimpleString::new(
+                                    "Invalid argument",
+                                )),
+                            };
+                            framed.send(response.frame).await?;
+                        } else {
+                            return Err(e);
+                        }
+                    }
+                }
             }
             Some(Err(e)) => return Err(e),
             None => return Ok(()),

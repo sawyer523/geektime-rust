@@ -1,83 +1,73 @@
 # Geektime Rust 语言训练营
 
-## 环境设置
+## 为 simple-redis 实现你想实现的命令，比如：
 
-### 安装 Rust
+* echo command:  https://redis.io/commands/echo/
+* hmget command:  https://redis.io/commands/hmget/
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+server 端：
+
+```shell
+2024-05-12T15:44:47.118554Z  INFO simple_redis: Simple-Redis-Server is listening on 0.0.0.0:6379
+2024-05-12T15:44:58.556138Z  INFO simple_redis: Accepted connection from 127.0.0.1:59914
+2024-05-12T15:44:58.556405Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([67, 79, 77, 77, 65, 78, 68]))), BulkString(BulkString(Some([68, 79, 67, 83])))])))
+2024-05-12T15:44:58.556675Z  INFO simple_redis::network: Executing command: Unrecognized(Unrecognized)
+2024-05-12T15:44:58.556701Z  INFO simple_redis::network: Sending response: SimpleString(SimpleString("OK"))
+2024-05-12T15:45:12.558530Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([101, 99, 104, 111]))), BulkString(BulkString(Some([104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100])))])))
+2024-05-12T15:46:03.075443Z  INFO simple_redis: Accepted connection from 127.0.0.1:60077
+2024-05-12T15:46:03.075583Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([67, 79, 77, 77, 65, 78, 68]))), BulkString(BulkString(Some([68, 79, 67, 83])))])))
+2024-05-12T15:46:03.075628Z  INFO simple_redis::network: Executing command: Unrecognized(Unrecognized)
+2024-05-12T15:46:03.075647Z  INFO simple_redis::network: Sending response: SimpleString(SimpleString("OK"))
+2024-05-12T15:46:04.806581Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([101, 99, 104, 111]))), BulkString(BulkString(Some([104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100])))])))
+2024-05-12T15:46:04.806635Z  INFO simple_redis::network: Executing command: Echo(Echo { value: "hello world" })
+2024-05-12T15:46:04.806654Z  INFO simple_redis::network: Sending response: SimpleString(SimpleString("\"hello world\""))
+2024-05-12T15:46:17.482251Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([104, 109, 115, 101, 116]))), BulkString(BulkString(Some([109, 121, 104, 97, 115, 104]))), BulkString(BulkString(Some([49]))), BulkString(BulkString(Some([50]))), BulkString(BulkString(Some([51]))), BulkString(BulkString(Some([52]))), BulkString(BulkString(Some([53]))), BulkString(BulkString(Some([54]))), BulkString(BulkString(Some([55]))), BulkString(BulkString(Some([56])))])))
+2024-05-12T15:46:17.482347Z  INFO simple_redis::network: Executing command: HMSet(HMSet { key: "myhash", fields: RespArray(Some([BulkString(BulkString(Some([49]))), BulkString(BulkString(Some([50]))), BulkString(BulkString(Some([51]))), BulkString(BulkString(Some([52]))), BulkString(BulkString(Some([53]))), BulkString(BulkString(Some([54]))), BulkString(BulkString(Some([55]))), BulkString(BulkString(Some([56])))])) })
+2024-05-12T15:46:17.482459Z  INFO simple_redis::network: Sending response: SimpleString(SimpleString("OK"))
+2024-05-12T15:46:28.129893Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([104, 109, 103, 101, 116]))), BulkString(BulkString(Some([109, 121, 104, 97, 115, 104]))), BulkString(BulkString(Some([49]))), BulkString(BulkString(Some([50]))), BulkString(BulkString(Some([51]))), BulkString(BulkString(Some([52]))), BulkString(BulkString(Some([53]))), BulkString(BulkString(Some([54]))), BulkString(BulkString(Some([55]))), BulkString(BulkString(Some([56]))), BulkString(BulkString(Some([57]))), BulkString(BulkString(Some([49, 48])))])))
+2024-05-12T15:46:30.539645Z  INFO simple_redis::network: Executing command: HMGet(HMGet { key: "myhash", fields: RespArray(Some([BulkString(BulkString(Some([49]))), BulkString(BulkString(Some([50]))), BulkString(BulkString(Some([51]))), BulkString(BulkString(Some([52]))), BulkString(BulkString(Some([53]))), BulkString(BulkString(Some([54]))), BulkString(BulkString(Some([55]))), BulkString(BulkString(Some([56]))), BulkString(BulkString(Some([57]))), BulkString(BulkString(Some([49, 48])))])) })
+2024-05-12T15:46:30.539749Z  INFO simple_redis::network: Sending response: Array(RespArray(Some([BulkString(BulkString(Some([50]))), Null(RespNull), BulkString(BulkString(Some([52]))), Null(RespNull), BulkString(BulkString(Some([54]))), Null(RespNull), BulkString(BulkString(Some([56]))), Null(RespNull), Null(RespNull), Null(RespNull)])))
+2024-05-12T15:46:38.138795Z  INFO simple_redis::network: Received frame: Array(RespArray(Some([BulkString(BulkString(Some([104, 109, 103, 101, 116]))), BulkString(BulkString(Some([109, 121, 104, 97, 115, 104]))), BulkString(BulkString(Some([49]))), BulkString(BulkString(Some([50]))), BulkString(BulkString(Some([51]))), BulkString(BulkString(Some([52]))), BulkString(BulkString(Some([53]))), BulkString(BulkString(Some([54]))), BulkString(BulkString(Some([55]))), BulkString(BulkString(Some([56]))), BulkString(BulkString(Some([57]))), BulkString(BulkString(Some([49, 48])))])))
+2024-05-12T15:46:38.138906Z  INFO simple_redis::network: Executing command: HMGet(HMGet { key: "myhash", fields: RespArray(Some([BulkString(BulkString(Some([49]))), BulkString(BulkString(Some([50]))), BulkString(BulkString(Some([51]))), BulkString(BulkString(Some([52]))), BulkString(BulkString(Some([53]))), BulkString(BulkString(Some([54]))), BulkString(BulkString(Some([55]))), BulkString(BulkString(Some([56]))), BulkString(BulkString(Some([57]))), BulkString(BulkString(Some([49, 48])))])) })
+2024-05-12T15:46:38.139027Z  INFO simple_redis::network: Sending response: Array(RespArray(Some([BulkString(BulkString(Some([50]))), Null(RespNull), BulkString(BulkString(Some([52]))), Null(RespNull), BulkString(BulkString(Some([54]))), Null(RespNull), BulkString(BulkString(Some([56]))), Null(RespNull), Null(RespNull), Null(RespNull)])))
 ```
 
-### 安装 VSCode 插件
+client:
 
-- crates: Rust 包管理
-- Even Better TOML: TOML 文件支持
-- Better Comments: 优化注释显示
-- Error Lens: 错误提示优化
-- GitLens: Git 增强
-- Github Copilot: 代码提示
-- indent-rainbow: 缩进显示优化
-- Prettier - Code formatter: 代码格式化
-- REST client: REST API 调试
-- rust-analyzer: Rust 语言支持
-- Rust Test lens: Rust 测试支持
-- Rust Test Explorer: Rust 测试概览
-- TODO Highlight: TODO 高亮
-- vscode-icons: 图标优化
-- YAML: YAML 文件支持
-
-### 安装 cargo generate
-
-cargo generate 是一个用于生成项目模板的工具。它可以使用已有的 github repo 作为模版生成新的项目。
-
-```bash
-cargo install cargo-generate
+```shell
+❯ redis-cli
+127.0.0.1:6379> echo "hello world"
+"hello world"
+127.0.0.1:6379> hmset myhash 1 2 3 4 5 6 7 8
+OK
+127.0.0.1:6379> hmget myhash 1 2 3 4 5 6 7 8 9 10
+ 1) "2"
+ 2) (nil)
+ 3) "4"
+ 4) (nil)
+ 5) "6"
+ 6) (nil)
+ 7) "8"
+ 8) (nil)
+ 9) (nil)
+10) (nil)
+(2.41s)
+127.0.0.1:6379> hmget myhash 1 2 3 4 5 6 7 8 9 10
+ 1) "2"
+ 2) (nil)
+ 3) "4"
+ 4) (nil)
+ 5) "6"
+ 6) (nil)
+ 7) "8"
+ 8) (nil)
+ 9) (nil)
+10) (nil)
+127.0.0.1:6379>
 ```
 
-在我们的课程中，新的项目会使用 `tyr-rust-bootcamp/template` 模版生成基本的代码：
+## 重构代码：
 
-```bash
-cargo generate tyr-rust-bootcamp/template
-```
+[删除 NullBulkString / NullArray](./src/resp/bulk_string.rs)
 
-### 安装 pre-commit
-
-pre-commit 是一个代码检查工具，可以在提交代码前进行代码检查。
-
-```bash
-pipx install pre-commit
-```
-
-安装成功后运行 `pre-commit install` 即可。
-
-### 安装 Cargo deny
-
-Cargo deny 是一个 Cargo 插件，可以用于检查依赖的安全性。
-
-```bash
-cargo install --locked cargo-deny
-```
-
-### 安装 typos
-
-typos 是一个拼写检查工具。
-
-```bash
-cargo install typos-cli
-```
-
-### 安装 git cliff
-
-git cliff 是一个生成 changelog 的工具。
-
-```bash
-cargo install git-cliff
-```
-
-### 安装 cargo nextest
-
-cargo nextest 是一个 Rust 增强测试工具。
-
-```bash
-cargo install cargo-nextest --locked
-```
+[重构 BulkString / RespArray 代码](./src/resp/array.rs)
