@@ -17,3 +17,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 axum-macros = { workspace = true }
 chrono = { version = "0.4.38", features = ["serde"] }
+argon2 = { version = "0.5.3", features = ["std"] }
+
+[dev-dependencies]
+sqlx-db-tester = "0.4.2"
