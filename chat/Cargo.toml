@@ -1,0 +1,18 @@
+[workspace]
+members = ["chat_server", "notify_server"]
+resolver = "2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace.dependencies]
+anyhow = "1.0.86"
+axum = { version = "0.7.5", features = ["http2", "query", "tracing", "multipart"] }
+axum-macros = "0.4.1"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_yaml = "0.9.34"
+sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio", "tls-rustls"] }
+thiserror = "1.0.61"
+tokio = { version = "1.38.0", features = ["rt", "rt-multi-thread", "macros", "net", "fs", "io-util"] }
+tracing = "0.1.40"
+tracing-opentelemetry = "0.24.0"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
