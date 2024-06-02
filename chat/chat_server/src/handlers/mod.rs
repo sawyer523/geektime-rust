@@ -5,7 +5,6 @@ mod messages;
 use axum::response::IntoResponse;
 use axum_macros::debug_handler;
 
-
 pub(crate) use auth::*;
 pub(crate) use chat::*;
 pub(crate) use messages::*;

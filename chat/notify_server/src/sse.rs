@@ -1,13 +1,10 @@
-use std::convert::Infallible;
-use std::time::Duration;
-use axum::{
-    response::sse::{Event, Sse},
-};
+use axum::response::sse::{Event, Sse};
 use axum_extra::{headers, TypedHeader};
 use futures::stream::{self, Stream};
+use std::convert::Infallible;
+use std::time::Duration;
 use tokio_stream::StreamExt as _;
 use tracing::info;
-
 
 pub(crate) async fn sse_handler(
     TypedHeader(user_agent): TypedHeader<headers::UserAgent>,

@@ -1,8 +1,8 @@
 use anyhow::Result;
+use notify_server::get_router;
 use tokio::net::TcpListener;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::{fmt::Layer, layer::SubscriberExt, util::SubscriberInitExt, Layer as _};
-use notify_server::{get_router};
 
 #[tokio::main]
 async fn main() -> Result<()> {

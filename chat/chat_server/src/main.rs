@@ -1,8 +1,8 @@
 use anyhow::Result;
+use chat_server::{get_router, AppConfig};
 use tokio::net::TcpListener;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::{fmt::Layer, layer::SubscriberExt, util::SubscriberInitExt, Layer as _};
-use chat_server::{AppConfig, get_router};
 
 #[tokio::main]
 async fn main() -> Result<()> {
