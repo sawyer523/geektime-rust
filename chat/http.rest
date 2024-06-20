@@ -118,3 +118,6 @@ Authorization: Bearer {{token}}
 ### get messages
 GET http://localhost:6688/api/chats/1/messages?limit=6&last_id=5
 Authorization: Bearer {{token}}
+
+### get sse
+GET http://localhost:6687/events?access_token={{token}}
