@@ -1,19 +1,29 @@
-### signin user
+### signup user1
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
-//{
-//  "workspace": "acme",
-//  "fullname": "John Doe",
-//  "email": "JohnDoe@acme.org",
-//  "password": "password"
-//}
-//{
-//  "workspace": "acme",
-//  "fullname": "Alice Doe",
-//  "email": "AliceDoe@acme.org",
-//  "password": "password"
-//}
+{
+  "workspace": "acme",
+  "fullname": "John Doe",
+  "email": "JohnDoe@acme.org",
+  "password": "password"
+}
+
+### signup user2
+POST http://localhost:6688/api/signup
+Content-Type: application/json
+
+{
+  "workspace": "acme",
+  "fullname": "Alice Doe",
+  "email": "AliceDoe@acme.org",
+  "password": "password"
+}
+
+### signup user3
+POST http://localhost:6688/api/signup
+Content-Type: application/json
+
 {
   "workspace": "acme",
   "fullname": "Bob",
@@ -21,8 +31,7 @@ Content-Type: application/json
   "password": "password"
 }
 
-### login user
-@name = signin
+### login user1
 POST http://localhost:6688/api/signin
 Content-Type: application/json
 
@@ -94,4 +103,18 @@ Hello world!
 
 ### get file hello.txt
 GET http://localhost:6688/api/files/1/c35/419/65321acb48b82be537efafba581c962099.yml
+Authorization: Bearer {{token}}
+
+### send a message
+POST http://localhost:6688/api/chats/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Hello world!",
+  "files": []
+}
+
+### get messages
+GET http://localhost:6688/api/chats/1/messages?limit=6&last_id=5
 Authorization: Bearer {{token}}

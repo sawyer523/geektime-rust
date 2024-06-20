@@ -61,14 +61,15 @@ impl Deref for DecodingKey {
 mod tests {
     use anyhow::Result;
 
-    use crate::User;
-
     use super::*;
+    use super::User;
 
     #[tokio::test]
     async fn jwt_sing_verify_should_work() -> Result<()> {
-        let encoding_key = EncodingKey::load(include_str!("../../fixtures/encoding.pem"))?;
-        let decoding_key = DecodingKey::load(include_str!("../../fixtures/decoding.pem"))?;
+        let encoding_key =
+            EncodingKey::load(include_str!("../../../chat_server/fixtures/encoding.pem"))?;
+        let decoding_key =
+            DecodingKey::load(include_str!("../../../chat_server/fixtures/decoding.pem"))?;
         let user = User::new(1, "test", "test@163.com".into());
 
         let token = encoding_key.sign(user.clone())?;

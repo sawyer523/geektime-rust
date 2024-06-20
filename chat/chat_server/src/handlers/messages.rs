@@ -4,20 +4,34 @@ use axum::{
     http::HeaderMap,
     Json, response::IntoResponse,
 };
+use axum::extract::Query;
 use axum_macros::debug_handler;
 use tokio::fs;
 use tracing::{info, warn};
 
-use crate::{AppError, AppState, ChatFile, User};
+use chat_core::User;
+
+use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessage};
 
 #[debug_handler]
-pub(crate) async fn send_message_handler() -> impl IntoResponse {
-    "send_message"
+pub(crate) async fn send_message_handler(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    Path(chat_id): Path<u64>,
+    Json(input): Json<CreateMessage>,
+) -> Result<impl IntoResponse, AppError> {
+    let message = state.create_message(&input, chat_id, user.id as _).await?;
+    Ok(Json(message))
 }
 
 #[debug_handler]
-pub(crate) async fn list_messages_handler() -> impl IntoResponse {
-    "list_messages"
+pub(crate) async fn list_messages_handler(
+    State(state): State<AppState>,
+    Path(chat_id): Path<u64>,
+    Query(input): Query<ListMessage>,
+) -> Result<impl IntoResponse, AppError> {
+    let messages = state.list_messages(input, chat_id).await?;
+    Ok(Json(messages))
 }
 
 #[debug_handler]

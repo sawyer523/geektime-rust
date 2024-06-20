@@ -1,5 +1,5 @@
 [workspace]
-members = ["chat_server", "notify_server"]
+members = ["chat_core", "chat_server", "notify_server"]
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -16,3 +16,10 @@ tokio = { version = "1.38.0", features = ["rt", "rt-multi-thread", "macros", "ne
 tracing = "0.1.40"
 tracing-opentelemetry = "0.24.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+chrono = { version = "0.4.38", features = ["serde"] }
+serde_json = "1.0.117"
+chat-core = { path = "chat_core" }
+tower = "0.4.13"
+tower-http = { version = "0.5.2", features = ["compression-full", "trace", "fs"] }
+axum-extra = { version = "0.9.3", features = ["typed-header"] }
+jwt-simple = "0.12.9"

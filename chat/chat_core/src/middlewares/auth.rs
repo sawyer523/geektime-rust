@@ -7,22 +7,25 @@ use axum_extra::headers::authorization::Bearer;
 use axum_extra::TypedHeader;
 use tracing::warn;
 
-use crate::AppState;
+use crate::TokenVerifier;
 
-pub async fn verify_token(State(state): State<AppState>, req: Request, next: Next) -> Response {
+pub async fn verify_token<T>(State(state): State<T>, req: Request, next: Next) -> Response
+where
+    T: TokenVerifier + Clone + Send + Sync + 'static,
+{
     let (mut parts, body) = req.into_parts();
     let req =
         match TypedHeader::<Authorization<Bearer>>::from_request_parts(&mut parts, &state).await {
             Ok(TypedHeader(Authorization(bearer))) => {
                 let token = bearer.token();
-                match state.dk.verify(token) {
+                match state.verify(token) {
                     Ok(user) => {
                         let mut req = Request::from_parts(parts, body);
                         req.extensions_mut().insert(user);
                         req
                     }
                     Err(e) => {
-                        let msg = format!("verify token failed: {}", e);
+                        let msg = format!("verify token failed: {:?}", e);
                         warn!(msg);
                         return (StatusCode::FORBIDDEN, msg).into_response();
                     }
@@ -39,6 +42,8 @@ pub async fn verify_token(State(state): State<AppState>, req: Request, next: Nex
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use anyhow::Result;
     use axum::body::Body;
     use axum::extract::Request;
@@ -49,23 +54,45 @@ mod tests {
     use axum::routing::get;
     use tower::ServiceExt;
 
-    use crate::{AppConfig, User};
+    use crate::{DecodingKey, EncodingKey, User};
 
     use super::*;
+
+    #[derive(Clone)]
+    struct AppState(Arc<AppStateInner>);
+
+    struct AppStateInner {
+        ek: EncodingKey,
+        dk: DecodingKey,
+    }
+
+    impl TokenVerifier for AppState {
+        type Error = jwt_simple::Error;
+
+        fn verify(&self, token: &str) -> Result<User, Self::Error> {
+            self.0.dk.verify(token)
+        }
+    }
 
     async fn handler(_req: Request) -> impl IntoResponse {
         (StatusCode::OK, "ok")
     }
     #[tokio::test]
     async fn verify_token_middleware_should_work() -> Result<()> {
-        let config = AppConfig::load()?;
-        let (_tdb, state) = AppState::new_for_test(config).await?;
+        let encoding_key =
+            EncodingKey::load(include_str!("../../../chat_server/fixtures/encoding.pem"))?;
+        let decoding_key =
+            DecodingKey::load(include_str!("../../../chat_server/fixtures/decoding.pem"))?;
+        let state = AppState(Arc::new(AppStateInner {
+            ek: encoding_key,
+            dk: decoding_key,
+        }));
         let user = User::new(1, "cxn", "cxn@acme.org");
-        let token = state.ek.sign(user)?;
+        let token = state.0.ek.sign(user)?;
 
         let app = Router::new()
             .route("/", get(handler))
-            .layer(from_fn_with_state(state.clone(), verify_token))
+            .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
             .with_state(state);
 
         let req = Request::builder()

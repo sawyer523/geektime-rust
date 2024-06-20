@@ -8,20 +8,19 @@ use axum::Router;
 use axum::routing::{get, post};
 use sqlx::PgPool;
 
+use chat_core::{DecodingKey, EncodingKey, set_layer, TokenVerifier, User, verify_token};
 pub use config::AppConfig;
 pub use error::AppError;
 use handlers::*;
 pub use models::*;
 
-use crate::middlewares::{set_layer, verify_token};
-use crate::utils::{DecodingKey, EncodingKey};
+use crate::middlewares::verify_chat;
 
 mod config;
 mod error;
 mod handlers;
 mod middlewares;
 mod models;
-mod utils;
 
 #[derive(Debug, Clone)]
 pub(crate) struct AppState {
@@ -39,20 +38,24 @@ pub(crate) struct AppStateInner {
 pub async fn get_router(config: AppConfig) -> Result<Router, AppError> {
     let state: AppState = AppState::try_new(config).await?;
 
-    let api = Router::new()
-        .route("/users", get(list_chat_user_handler))
-        .route("/chats", get(list_chat_handler).post(create_chat_handler))
+    let chat = Router::new()
         .route(
-            "/chats/:id",
+            "/:id",
             get(get_chat_handler)
                 .patch(update_chat_handler)
                 .delete(delete_chat_handler)
                 .post(send_message_handler),
         )
-        .route("/chats/:id/messages", get(list_messages_handler))
+        .route("/:id/messages", get(list_messages_handler))
+        .layer(from_fn_with_state(state.clone(), verify_chat))
+        .route("/", get(list_chat_handler).post(create_chat_handler));
+
+    let api = Router::new()
+        .nest("/chats", chat)
+        .route("/users", get(list_chat_user_handler))
         .route("/upload", post(upload_handler))
         .route("/files/:ws_id/*path", get(download_handler))
-        .layer(from_fn_with_state(state.clone(), verify_token))
+        .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
         .route("/signin", post(signin_handler))
         .route("/signup", post(signup_handler));
 
@@ -68,6 +71,14 @@ impl Deref for AppState {
 
     fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+impl TokenVerifier for AppState {
+    type Error = jwt_simple::Error;
+
+    fn verify(&self, token: &str) -> Result<User, Self::Error> {
+        self.inner.dk.verify(token)
     }
 }
 
@@ -106,7 +117,8 @@ mod test_util {
     use super::*;
 
     impl AppState {
-        pub async fn new_for_test(config: AppConfig) -> Result<(TestPg, Self), AppError> {
+        pub async fn new_for_test() -> Result<(TestPg, Self), AppError> {
+            let config = AppConfig::load()?;
             let dk = DecodingKey::load(&config.auth.pk).context("load pk failed")?;
             let ek = EncodingKey::load(&config.auth.sk).context("load sk failed")?;
             let post = config.server.db_url.rfind('/').expect("invalid db_url");
