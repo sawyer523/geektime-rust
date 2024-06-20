@@ -75,10 +75,10 @@ impl Deref for AppState {
 }
 
 impl TokenVerifier for AppState {
-    type Error = jwt_simple::Error;
+    type Error = AppError;
 
     fn verify(&self, token: &str) -> Result<User, Self::Error> {
-        self.inner.dk.verify(token)
+        Ok(self.inner.dk.verify(token)?)
     }
 }
 

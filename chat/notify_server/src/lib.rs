@@ -1,38 +1,75 @@
+use std::ops::Deref;
+use std::sync::Arc;
+
 use axum::{
     response::{Html, IntoResponse},
     Router,
     routing::get,
 };
-use futures::StreamExt;
-use sqlx::postgres::PgListener;
-use tracing::info;
+use axum::middleware::from_fn_with_state;
+use dashmap::DashMap;
+use tokio::sync::broadcast;
 
+use chat_core::{DecodingKey, TokenVerifier, User, verify_token};
+pub use config::AppConfig;
+pub use notif::*;
+
+use crate::error::AppError;
 use crate::sse::sse_handler;
 
+mod config;
+mod error;
+mod notif;
 mod sse;
 
 const INDEX_HTML: &str = include_str!("../index.html");
 
-pub fn get_router() -> Router {
-    Router::new()
-        .route("/", get(index_handler))
+pub type UserMap = Arc<DashMap<u64, broadcast::Sender<Arc<AppEvent>>>>;
+
+#[derive(Clone)]
+pub struct AppState(Arc<AppStateInner>);
+
+pub struct AppStateInner {
+    config: AppConfig,
+    dk: DecodingKey,
+    users: UserMap,
+}
+
+pub fn get_router(config: AppConfig) -> (Router, AppState) {
+    let state = AppState::new(config);
+    let app = Router::new()
         .route("/events", get(sse_handler))
+        .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
+        .route("/", get(index_handler))
+        .with_state(state.clone());
+
+    (app, state)
 }
 
 async fn index_handler() -> impl IntoResponse {
     Html(INDEX_HTML)
 }
 
-pub async fn setup_pg_listener() -> anyhow::Result<()> {
-    let mut listerner = PgListener::connect("postgresql://localhost:5432").await?;
-    listerner.listen("chat_updated").await?;
-    listerner.listen("chat_message_created").await?;
+impl TokenVerifier for AppState {
+    type Error = AppError;
 
-    let mut stream = listerner.into_stream();
-    tokio::spawn(async move {
-        while let Some(notification) = stream.next().await {
-            info!("notification: {:?}", notification);
-        }
-    });
-    Ok(())
+    fn verify(&self, token: &str) -> Result<User, Self::Error> {
+        Ok(self.dk.verify(token)?)
+    }
+}
+
+impl Deref for AppState {
+    type Target = AppStateInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AppState {
+    pub fn new(config: AppConfig) -> Self {
+        let dk = DecodingKey::load(&config.auth.pk).expect("Failed to load public key");
+        let users = Arc::new(DashMap::new());
+        Self(Arc::new(AppStateInner { config, dk, users }))
+    }
 }

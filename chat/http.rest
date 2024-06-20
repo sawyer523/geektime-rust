@@ -94,7 +94,7 @@ Content-Type: multipart/form-data; boundary=Boundary
 Content-Disposition: form-data; filename="app.yml"
 Content-Type: application/octet-stream
 
-< ./chat_server/app.yml
+< ./chat_server/chat.yml
 --Boundary
 Content-Disposition: form-data; filename="hello.txt"
 
