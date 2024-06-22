@@ -11,9 +11,13 @@ use sqlx::PgPool;
 use chat_core::{DecodingKey, EncodingKey, set_layer, TokenVerifier, User, verify_token};
 pub use config::AppConfig;
 pub use error::AppError;
-use handlers::*;
 pub use models::*;
 
+use crate::handlers::{
+    create_chat_handler, delete_chat_handler, download_handler, get_chat_handler, index_handler,
+    list_chat_handler, list_chat_user_handler, list_messages_handler, send_message_handler,
+    signin_handler, signup_handler, update_chat_handler, upload_handler,
+};
 use crate::middlewares::verify_chat;
 
 mod config;
@@ -23,21 +27,19 @@ mod middlewares;
 mod models;
 
 #[derive(Debug, Clone)]
-pub(crate) struct AppState {
-    pub(crate) inner: Arc<AppStateInner>,
+pub struct AppState {
+    inner: Arc<AppStateInner>,
 }
 
 #[allow(unused)]
-pub(crate) struct AppStateInner {
+pub struct AppStateInner {
     pub(crate) config: AppConfig,
     pub(crate) dk: DecodingKey,
     pub(crate) ek: EncodingKey,
     pub(crate) pool: PgPool,
 }
 
-pub async fn get_router(config: AppConfig) -> Result<Router, AppError> {
-    let state: AppState = AppState::try_new(config).await?;
-
+pub async fn get_router(state: AppState) -> Result<Router, AppError> {
     let chat = Router::new()
         .route(
             "/:id",
@@ -109,7 +111,7 @@ impl fmt::Debug for AppStateInner {
     }
 }
 
-#[cfg(test)]
+#[cfg(feature = "test-util")]
 mod test_util {
     use sqlx::Executor;
     use sqlx_db_tester::TestPg;
@@ -136,7 +138,6 @@ mod test_util {
         }
     }
 
-    #[cfg(test)]
     pub async fn get_test_pool(url: Option<&str>) -> (TestPg, PgPool) {
         let url = match url {
             Some(url) => url.to_string(),

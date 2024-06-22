@@ -20,6 +20,7 @@ pub enum AppError {
     JwtError(#[from] jwt_simple::Error),
 }
 
+#[allow(unused)]
 impl ErrorOutput {
     pub fn new(error: impl Into<String>) -> Self {
         Self {

@@ -4,7 +4,7 @@ VALUES ('acme', 0),
        ('foo', 0),
        ('bar', 0);
 
--- insert 5 users
+-- insert 5 users, all with the same password
 INSERT INTO users(fullname, email, password_hash, ws_id)
 VALUES ('Alice',
         'alice@acme.org',
