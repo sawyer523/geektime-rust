@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub use chat::{CreateChat, PatchChat};
-pub use message::{CreateMessage, ListMessage};
+pub use message::{CreateMessage, ListMessages};
 pub use user::{CreateUser, SigninUser};
 
 mod chat;

@@ -16,11 +16,13 @@ pub enum AppEvent {
     NewChat(Chat),
     AddToChat(Chat),
     RemoveFromChat(Chat),
+    UpdateChatName(Chat),
     NewMessage(Message),
 }
 
 #[derive(Debug)]
 struct Notification {
+    name: String,
     // users being impacted, so we should send the notification to them
     user_ids: HashSet<u64>,
     event: Arc<AppEvent>,
@@ -71,14 +73,25 @@ impl Notification {
         match r#type {
             "chat_updated" => {
                 let payload: ChatUpdated = serde_json::from_str(payload)?;
-                let ids = get_affected_chat_user_ids(payload.old.as_ref(), payload.new.as_ref());
+                let mut ids =
+                    get_affected_chat_user_ids(payload.old.as_ref(), payload.new.as_ref());
+                let name = get_affected_chat_name(payload.old.as_ref(), payload.new.as_ref());
                 let event = match payload.op.as_str() {
                     "INSERT" => AppEvent::NewChat(payload.new.expect("new should exist")),
-                    "UPDATE" => AppEvent::AddToChat(payload.new.expect("new should exist")),
+                    "UPDATE" => {
+                        if !name.is_empty() {
+                            let chat = payload.new.expect("new should exist");
+                            ids = chat.members.iter().map(|v| *v as u64).collect();
+                            AppEvent::UpdateChatName(chat)
+                        } else {
+                            AppEvent::AddToChat(payload.new.expect("new should exist"))
+                        }
+                    }
                     "DELETE" => AppEvent::RemoveFromChat(payload.old.expect("old should exist")),
                     _ => return Err(anyhow::anyhow!("invalid op")),
                 };
                 Ok(Self {
+                    name,
                     user_ids: ids,
                     event: Arc::new(event),
                 })
@@ -87,6 +100,7 @@ impl Notification {
                 let payload: ChatMessageCreated = serde_json::from_str(payload)?;
                 let user_ids = payload.members.iter().map(|v| *v as u64).collect();
                 Ok(Self {
+                    name: "".to_string(),
                     user_ids,
                     event: Arc::new(AppEvent::NewMessage(payload.message)),
                 })
@@ -113,3 +127,36 @@ fn get_affected_chat_user_ids(old: Option<&Chat>, new: Option<&Chat>) -> HashSet
         _ => HashSet::new(),
     }
 }
+
+// if name changed, return the new name, otherwise return empty string
+fn get_affected_chat_name(old: Option<&Chat>, new: Option<&Chat>) -> String {
+    match (old, new) {
+        (Some(old), Some(new)) => {
+            if old.name == new.name {
+                "".to_string()
+            } else {
+                match &new.name {
+                    Some(name) => name.to_string(),
+                    None => "".to_string(),
+                }
+            }
+        }
+        _ => "".to_string(),
+    }
+}
+
+// fn get_affected_chat_name(old: Option<&Chat>, new: Option<&Chat>) -> &str {
+//     match (old, new) {
+//         (Some(old), Some(new)) => {
+//             if old.name == new.name {
+//                 ""
+//             } else {
+//                 if let Some(name) = match &new.name {
+//                     Some(name) => name.as_str(),
+//                     None => "",
+//                 };
+//             }
+//         }
+//         _ => "",
+//     }
+// }

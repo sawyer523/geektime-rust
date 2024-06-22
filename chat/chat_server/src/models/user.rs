@@ -3,12 +3,13 @@ use std::mem;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use chat_core::{ChatUser, User};
 
 use crate::{AppError, AppState};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CreateUser {
     pub fullname: String,
     pub email: String,
@@ -16,7 +17,7 @@ pub struct CreateUser {
     pub password: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SigninUser {
     pub email: String,
     pub password: String,

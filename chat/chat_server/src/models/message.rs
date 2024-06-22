@@ -1,19 +1,20 @@
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 
 use chat_core::Message;
 
 use crate::{AppError, AppState, ChatFile};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CreateMessage {
     pub content: String,
     pub files: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ListMessage {
+#[derive(Debug, Clone, IntoParams, ToSchema, Serialize, Deserialize)]
+pub struct ListMessages {
     pub last_id: Option<u64>,
     pub limit: u64,
 }
@@ -62,7 +63,7 @@ impl AppState {
 
     pub async fn list_messages(
         &self,
-        input: ListMessage,
+        input: ListMessages,
         chat_id: u64,
     ) -> Result<Vec<Message>, AppError> {
         let last_id = input.last_id.unwrap_or(i64::MAX as _);
@@ -133,7 +134,7 @@ mod tests {
     async fn list_messages_should_work() -> Result<()> {
         let (_tdb, state) = AppState::new_for_test().await?;
 
-        let input = ListMessage {
+        let input = ListMessages {
             last_id: None,
             limit: 6,
         };
@@ -141,7 +142,7 @@ mod tests {
         assert_eq!(messages.len(), 6);
 
         let last_id = messages.last().expect("last message should exists").id;
-        let input = ListMessage {
+        let input = ListMessages {
             last_id: Some(last_id as _),
             limit: 6,
         };

@@ -72,7 +72,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "acme2",
+  "name": "acme3",
   "members": [
     1,
     2,

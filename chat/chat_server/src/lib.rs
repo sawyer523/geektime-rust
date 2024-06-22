@@ -7,26 +7,29 @@ use axum::middleware::from_fn_with_state;
 use axum::Router;
 use axum::routing::{get, post};
 use sqlx::PgPool;
+use utoipa::ToSchema;
 
 use chat_core::{DecodingKey, EncodingKey, set_layer, TokenVerifier, User, verify_token};
 pub use config::AppConfig;
-pub use error::AppError;
+pub use error::{AppError, ErrorOutput};
 pub use models::*;
 
 use crate::handlers::{
     create_chat_handler, delete_chat_handler, download_handler, get_chat_handler, index_handler,
-    list_chat_handler, list_chat_user_handler, list_messages_handler, send_message_handler,
+    list_chat_handler, list_chat_user_handler, list_message_handler, send_message_handler,
     signin_handler, signup_handler, update_chat_handler, upload_handler,
 };
 use crate::middlewares::verify_chat;
+use crate::openapi::OpenApiRouter;
 
 mod config;
 mod error;
 mod handlers;
 mod middlewares;
 mod models;
+mod openapi;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct AppState {
     inner: Arc<AppStateInner>,
 }
@@ -48,7 +51,7 @@ pub async fn get_router(state: AppState) -> Result<Router, AppError> {
                 .delete(delete_chat_handler)
                 .post(send_message_handler),
         )
-        .route("/:id/messages", get(list_messages_handler))
+        .route("/:id/messages", get(list_message_handler))
         .layer(from_fn_with_state(state.clone(), verify_chat))
         .route("/", get(list_chat_handler).post(create_chat_handler));
 
@@ -62,6 +65,7 @@ pub async fn get_router(state: AppState) -> Result<Router, AppError> {
         .route("/signup", post(signup_handler));
 
     let app = Router::new()
+        .openapi()
         .route("/", get(index_handler))
         .nest("/api", api)
         .with_state(state);

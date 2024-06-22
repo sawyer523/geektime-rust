@@ -12,7 +12,7 @@ use tracing::{info, warn};
 
 use chat_core::User;
 
-use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessage};
+use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessages};
 
 #[debug_handler]
 pub(crate) async fn send_message_handler(
@@ -26,10 +26,26 @@ pub(crate) async fn send_message_handler(
 }
 
 #[debug_handler]
-pub(crate) async fn list_messages_handler(
+#[utoipa::path(
+    get,
+    path = "/api/chats/{id}/messages",
+    params(
+        ("id" = u64, Path, description = "Chat id"),
+        ListMessages
+
+    ),
+    responses(
+        (status = 200, description = "List of messages", body = Vec<Message>),
+        (status = 400, description = "Invalid input", body = ErrorOutput),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+pub(crate) async fn list_message_handler(
     State(state): State<AppState>,
     Path(chat_id): Path<u64>,
-    Query(input): Query<ListMessage>,
+    Query(input): Query<ListMessages>,
 ) -> Result<impl IntoResponse, AppError> {
     let messages = state.list_messages(input, chat_id).await?;
     Ok(Json(messages))

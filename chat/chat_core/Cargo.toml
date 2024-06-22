@@ -17,3 +17,4 @@ axum = { workspace = true }
 axum-extra = { workspace = true }
 uuid = { version = "1.8.0", features = ["v7", "serde"] }
 tracing = { workspace = true }
+utoipa.workspace = true
