@@ -15,6 +15,7 @@ use crate::{AppError, AppState, CreateChat, PatchChat};
     responses(
         (status = 200, description = "List of chats", body = Vec<Chat>),
     ),
+    tag = "chat",
     security(
         ("token" = [])
     )
@@ -31,6 +32,7 @@ pub(crate) async fn list_chat_handler(
 #[utoipa::path(
     post,
     path = "/api/chats",
+    tag = "chat",
     responses(
         (status = 201, description = "Chat created", body = Chat),
     ),
@@ -54,6 +56,7 @@ pub(crate) async fn create_chat_handler(
     params(
         ("id" = u64, Path, description = "Chat id")
     ),
+    tag = "chat",
     responses(
         (status = 200, description = "Chat found", body = Chat),
         (status = 404, description = "Chat not found", body = ErrorOutput),
@@ -77,6 +80,7 @@ pub(crate) async fn get_chat_handler(
 #[utoipa::path(
     patch,
     path = "/api/chats/{id}",
+    tag = "chat",
     params(
         ("id" = u64, Path, description = "Chat id")
     ),
@@ -102,6 +106,7 @@ pub(crate) async fn update_chat_handler(
 #[utoipa::path(
     delete,
     path = "/api/chats/{id}",
+    tag = "chat",
     params(
         ("id" = u64, Path, description = "Chat id")
     ),

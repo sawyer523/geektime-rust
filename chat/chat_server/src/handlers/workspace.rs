@@ -8,6 +8,17 @@ use chat_core::User;
 use crate::{AppError, AppState};
 
 #[debug_handler]
+#[utoipa::path(
+    get,
+    path = "/api/users",
+    tag = "workspace",
+    responses(
+        (status = 200, description = "List of chat users", body = Vec<User>),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
 pub(crate) async fn list_chat_user_handler(
     Extension(user): Extension<User>,
     State(state): State<AppState>,

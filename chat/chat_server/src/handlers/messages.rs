@@ -15,6 +15,22 @@ use chat_core::User;
 use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessages};
 
 #[debug_handler]
+#[utoipa::path(
+    post,
+    path = "/api/chats/{id}/messages",
+    tag = "message",
+    params(
+        ("id" = u64, Path, description = "Chat id"),
+        CreateMessage,
+    ),
+    responses(
+        (status = 201, description = "Message created", body = Message),
+        (status = 400, description = "Invalid input", body = ErrorOutput),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
 pub(crate) async fn send_message_handler(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
@@ -29,10 +45,10 @@ pub(crate) async fn send_message_handler(
 #[utoipa::path(
     get,
     path = "/api/chats/{id}/messages",
+    tag = "message",
     params(
         ("id" = u64, Path, description = "Chat id"),
         ListMessages
-
     ),
     responses(
         (status = 200, description = "List of messages", body = Vec<Message>),
@@ -52,6 +68,17 @@ pub(crate) async fn list_message_handler(
 }
 
 #[debug_handler]
+#[utoipa::path(
+    post,
+    path = "/api/upload",
+    tag = "message",
+    responses(
+        (status = 200, description = "File uploaded", body = Vec<String>),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
 pub(crate) async fn upload_handler(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
@@ -83,6 +110,18 @@ pub(crate) async fn upload_handler(
 }
 
 #[debug_handler]
+#[utoipa::path(
+    get,
+    path = "/api/download/{ws_id}/{path:.+}",
+    tag = "message",
+    responses(
+        (status = 200, description = "File downloaded", body = Vec<u8>),
+        (status = 404, description = "File not found", body = ErrorOutput),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
 pub(crate) async fn download_handler(
     Extension(user): Extension<User>,
     Path((ws_id, path)): Path<(i64, String)>,

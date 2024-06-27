@@ -7,7 +7,7 @@ use chat_core::Message;
 
 use crate::{AppError, AppState, ChatFile};
 
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct CreateMessage {
     pub content: String,
     pub files: Vec<String>,
