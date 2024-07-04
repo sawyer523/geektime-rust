@@ -46,7 +46,7 @@ fn main() -> Result<()> {
                 "../protos/user-stats/messages.proto",
                 "../protos/user-stats/rpc.proto",
             ],
-            &["../protos/user-stats"],
+            &["../protos"],
         )?;
 
     Ok(())

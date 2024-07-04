@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package user_stats;
 
-import "messages.proto";
+import "user-stats/messages.proto";
 
 service UserStats {
   rpc Query(QueryRequest) returns (stream User);

@@ -1,11 +1,11 @@
 [package]
-name = "user-stat"
+name = "send"
 version = "0.1.0"
 edition = "2021"
 
 [features]
 default = []
-test_utils = ["sqlx-db-tester"]
+test_utils = ["fake", "nanoid", "uuid"]
 
 [dependencies]
 anyhow = { workspace = true }
@@ -23,7 +23,11 @@ serde_yaml = { workspace = true }
 itertools = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-sqlx-db-tester = { version = "0.4.2", optional = true }
+tokio-stream = { workspace = true }
+fake = { version = "2.9.2", features = ["derive", "chrono"], optional = true }
+nanoid = { version = "0.4.0", optional = true }
+uuid = { version = "1.9.1", features = ["v4", "serde"], optional = true }
+
 
 [build-dependencies]
 anyhow = { workspace = true }
@@ -31,6 +35,4 @@ tonic-build = { workspace = true }
 proto-builder-trait = { workspace = true }
 
 [dev-dependencies]
-fake = { workspace = true }
-nanoid = "0.4.0"
-user-stat = { workspace = true, features = ["test_utils"] }
+send = { workspace = true, features = ["test_utils"] }

@@ -1,11 +1,7 @@
 [package]
-name = "user-stat"
+name = "crm-metadata"
 version = "0.1.0"
 edition = "2021"
-
-[features]
-default = []
-test_utils = ["sqlx-db-tester"]
 
 [dependencies]
 anyhow = { workspace = true }
@@ -23,7 +19,8 @@ serde_yaml = { workspace = true }
 itertools = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-sqlx-db-tester = { version = "0.4.2", optional = true }
+fake = { workspace = true }
+tokio-stream = { workspace = true }
 
 [build-dependencies]
 anyhow = { workspace = true }
@@ -31,6 +28,4 @@ tonic-build = { workspace = true }
 proto-builder-trait = { workspace = true }
 
 [dev-dependencies]
-fake = { workspace = true }
 nanoid = "0.4.0"
-user-stat = { workspace = true, features = ["test_utils"] }

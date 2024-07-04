@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package notification;
+
+import "google/protobuf/timestamp.proto";
+
+message EmailMessage {
+  // unique identifier of the message
+  string message_id = 1;
+  // subject of the email
+  string subject = 2;
+  // sender of the email
+  string sender = 3;
+  // recipients of the email
+  repeated string recipients = 4;
+  // body of the email
+  string body = 5;
+}
+
+message SmsMessage {
+  // unique identifier of the message
+  string message_id = 1;
+  // sender of the sms
+  string sender = 2;
+  // recipients of the sms
+  repeated string recipients = 3;
+  // body of the sms
+  string body = 4;
+}
+
+message InAppMessage {
+  // unique identifier of the message
+  string message_id = 1;
+  // device id of the device to send the in-app message
+  string device_id = 2;
+  // title of the in-app message
+  string title = 3;
+  // body of the in-app message
+  string body = 4;
+}
+
+message SendRequest {
+  oneof msg {
+    EmailMessage email = 1;
+    SmsMessage sms = 2;
+    InAppMessage in_app = 3;
+  }
+}
+
+message SendResponse {
+  string message_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}

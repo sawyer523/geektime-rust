@@ -12,15 +12,14 @@ pub struct AppConfig {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub port: u16,
-    pub db_url: String,
 }
 
 impl AppConfig {
     pub fn load() -> Result<Self> {
         let ret = match (
-            File::open("user_stat.yml"),
-            File::open("/etc/config/user_stat.yml"),
-            env::var("USER_STATS_CONFIGS"),
+            File::open("send.yml"),
+            File::open("/etc/config/send.yml"),
+            env::var("SEND_CONFIGS"),
         ) {
             (Ok(reader), _, _) => serde_yaml::from_reader(reader),
             (_, Ok(reader), _) => serde_yaml::from_reader(reader),

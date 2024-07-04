@@ -1,5 +1,5 @@
 [workspace]
-members = ["crm", "user-stat"]
+members = ["crm", "crm-metadata", "send", "user-stat"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -17,8 +17,14 @@ serde_yaml = "0.9.34"
 itertools = "0.13.0"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+fake = { version = "2.9.2", features = ["derive", "chrono"] }
+tokio-stream = { version = "0.1.15" }
 
 proto-builder-trait = "0.6.1"
 tonic-build = "0.11.0"
 prost-build = "0.12.6"
 derive_builder = "0.20.0"
+
+user-stat = { path = "user-stat" }
+crm-metadata = { path = "crm-metadata" }
+send = { path = "send" }
