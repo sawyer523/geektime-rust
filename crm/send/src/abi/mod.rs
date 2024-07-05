@@ -6,11 +6,16 @@ use tokio::{sync::mpsc, time::sleep};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Response, Status};
 use tracing::{info, warn};
+use uuid::Uuid;
+
+use crm_metadata::{pb::Content, Tpl};
 
 use crate::{
-    AppConfig,
-    NotificationService, NotificationServiceInner, pb::{notification_server::NotificationServer, send_request::Msg, SendRequest, SendResponse}, ResponseStream, ServiceResult,
+    AppConfig, NotificationService, NotificationServiceInner, ResponseStream, ServiceResult,
 };
+use crate::pb::{EmailMessage, SendRequest, SendResponse};
+use crate::pb::notification_server::NotificationServer;
+use crate::pb::send_request::Msg;
 
 mod email;
 mod in_app;
@@ -69,6 +74,26 @@ fn to_ts() -> Timestamp {
         nanos: now.timestamp_subsec_nanos() as i32,
     };
     ts
+}
+
+impl SendRequest {
+    pub fn new(
+        subject: String,
+        sender: String,
+        recipients: &[String],
+        contents: &[Content],
+    ) -> Self {
+        let tpl = Tpl(contents);
+        let msg = Msg::Email(EmailMessage {
+            message_id: Uuid::new_v4().to_string(),
+            subject,
+            sender,
+            recipients: recipients.to_vec(),
+            body: tpl.to_body(),
+        });
+
+        SendRequest { msg: Some(msg) }
+    }
 }
 
 fn dummy_send() -> mpsc::Sender<Msg> {

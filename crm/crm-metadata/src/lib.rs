@@ -5,6 +5,7 @@ use std::sync::Arc;
 use futures::Stream;
 use tonic::{async_trait, Request, Response, Status, Streaming};
 
+pub use abi::Tpl;
 pub use config::AppConfig;
 use pb::{
     Content,
