@@ -1,10 +1,7 @@
 use bytes::BytesMut;
 use enum_dispatch::enum_dispatch;
 
-use crate::{
-    BulkString, RespArray, RespDecode, RespError, RespMap, RespNull, RespSet, SimpleError,
-    SimpleString,
-};
+use crate::{Array, BulkString, Map, Null, RespDecode, RespError, Set, SimpleError, SimpleString};
 
 #[enum_dispatch(RespEncode)]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -13,12 +10,12 @@ pub enum RespFrame {
     Error(SimpleError),
     Integer(i64),
     BulkString(BulkString),
-    Array(RespArray),
-    Null(RespNull),
+    Array(Array),
+    Null(Null),
     Boolean(bool),
     Double(f64),
-    Map(RespMap),
-    Set(RespSet),
+    Map(Map),
+    Set(Set),
 }
 
 impl RespDecode for RespFrame {
@@ -45,11 +42,11 @@ impl RespDecode for RespFrame {
             }
             Some(b'*') => {
                 // try null array first
-                let frame = RespArray::decode(buf)?;
+                let frame = Array::decode(buf)?;
                 Ok(frame.into())
             }
             Some(b'_') => {
-                let frame = RespNull::decode(buf)?;
+                let frame = Null::decode(buf)?;
                 Ok(frame.into())
             }
             Some(b'#') => {
@@ -61,11 +58,11 @@ impl RespDecode for RespFrame {
                 Ok(frame.into())
             }
             Some(b'%') => {
-                let frame = RespMap::decode(buf)?;
+                let frame = Map::decode(buf)?;
                 Ok(frame.into())
             }
             Some(b'~') => {
-                let frame = RespSet::decode(buf)?;
+                let frame = Set::decode(buf)?;
                 Ok(frame.into())
             }
             None => Err(RespError::NotComplete),
@@ -79,16 +76,16 @@ impl RespDecode for RespFrame {
     fn expect_length(buf: &[u8]) -> Result<usize, RespError> {
         let mut iter = buf.iter().peekable();
         match iter.peek() {
-            Some(b'*') => RespArray::expect_length(buf),
-            Some(b'~') => RespSet::expect_length(buf),
-            Some(b'%') => RespMap::expect_length(buf),
+            Some(b'*') => Array::expect_length(buf),
+            Some(b'~') => Set::expect_length(buf),
+            Some(b'%') => Map::expect_length(buf),
             Some(b'$') => BulkString::expect_length(buf),
             Some(b':') => i64::expect_length(buf),
             Some(b'+') => SimpleString::expect_length(buf),
             Some(b'-') => SimpleError::expect_length(buf),
             Some(b'#') => bool::expect_length(buf),
             Some(b',') => f64::expect_length(buf),
-            Some(b'_') => RespNull::expect_length(buf),
+            Some(b'_') => Null::expect_length(buf),
             _ => Err(RespError::NotComplete),
         }
     }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::{Backend, BulkString, RespArray, RespFrame, RespNull};
+use crate::{Backend, BulkString, Array, RespFrame, Null};
 use crate::cmd::{
     CommandError, CommandExecutor, extract_args, HGet, HGetAll, HMGet, HMSet, HSet,
     RESP_OK, validate_command,
@@ -10,7 +10,7 @@ impl CommandExecutor for HGet {
     fn execute(self, backend: &Backend) -> RespFrame {
         backend
             .hget(&self.key, &self.field)
-            .unwrap_or_else(|| RespFrame::Null(RespNull))
+            .unwrap_or_else(|| RespFrame::Null(Null))
     }
 }
 
@@ -32,9 +32,9 @@ impl CommandExecutor for HGetAll {
                     .flat_map(|(k, v)| vec![BulkString::from(k).into(), v])
                     .collect::<Vec<RespFrame>>();
 
-                RespArray::new(ret).into()
+                Array::new(ret).into()
             }
-            None => RespArray::new([]).into(),
+            None => Array::new([]).into(),
         }
     }
 }
@@ -74,16 +74,16 @@ impl CommandExecutor for HMGet {
                     &self.key,
                     &String::from_utf8_lossy(field.as_ref()).to_string(),
                 );
-                result.push(value.unwrap_or_else(|| RespFrame::Null(RespNull)));
+                result.push(value.unwrap_or_else(|| RespFrame::Null(Null)));
             }
         }
-        RespFrame::Array(RespArray(Some(result)))
+        RespFrame::Array(Array(Some(result)))
     }
 }
 
-impl TryFrom<RespArray> for HGet {
+impl TryFrom<Array> for HGet {
     type Error = CommandError;
-    fn try_from(value: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(value: Array) -> Result<Self, Self::Error> {
         validate_command(&value, &["hget"], 2)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match (args.next(), args.next()) {
@@ -98,9 +98,9 @@ impl TryFrom<RespArray> for HGet {
     }
 }
 
-impl TryFrom<RespArray> for HGetAll {
+impl TryFrom<Array> for HGetAll {
     type Error = CommandError;
-    fn try_from(value: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(value: Array) -> Result<Self, Self::Error> {
         validate_command(&value, &["hgetall"], 1)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match args.next() {
@@ -115,9 +115,9 @@ impl TryFrom<RespArray> for HGetAll {
     }
 }
 
-impl TryFrom<RespArray> for HSet {
+impl TryFrom<Array> for HSet {
     type Error = CommandError;
-    fn try_from(value: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(value: Array) -> Result<Self, Self::Error> {
         validate_command(&value, &["hset"], 3)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match (args.next(), args.next(), args.next()) {
@@ -133,10 +133,10 @@ impl TryFrom<RespArray> for HSet {
     }
 }
 
-impl TryFrom<RespArray> for HMSet {
+impl TryFrom<Array> for HMSet {
     type Error = CommandError;
 
-    fn try_from(value: RespArray) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Array) -> std::result::Result<Self, Self::Error> {
         validate_command(&value, &["hmset"], value.0.as_ref().unwrap().len() - 1)?;
         if value.0.as_ref().unwrap().len() % 2 != 0 {
             return Err(CommandError::InvalidArgument(
@@ -147,7 +147,7 @@ impl TryFrom<RespArray> for HMSet {
         match args.next() {
             Some(RespFrame::BulkString(k)) => Ok(HMSet {
                 key: String::from_utf8_lossy(k.as_ref()).to_string(),
-                fields: RespArray(Some(args.collect())),
+                fields: Array(Some(args.collect())),
             }),
             _ => Err(CommandError::InvalidArgument(
                 "Invalid argument".to_string(),
@@ -156,16 +156,16 @@ impl TryFrom<RespArray> for HMSet {
     }
 }
 
-impl TryFrom<RespArray> for HMGet {
+impl TryFrom<Array> for HMGet {
     type Error = CommandError;
 
-    fn try_from(value: RespArray) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Array) -> std::result::Result<Self, Self::Error> {
         validate_command(&value, &["hmget"], value.0.as_ref().unwrap().len() - 1)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match args.next() {
             Some(RespFrame::BulkString(k)) => Ok(HMGet {
                 key: String::from_utf8_lossy(k.as_ref()).to_string(),
-                fields: RespArray(Some(args.collect())),
+                fields: Array(Some(args.collect())),
             }),
             _ => Err(CommandError::InvalidArgument(
                 "Invalid argument".to_string(),
@@ -186,7 +186,7 @@ mod tests {
     fn test_hget_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*3\r\n$4\r\nhget\r\n$3\r\nkey\r\n$5\r\nfield\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let result = HGet::try_from(frame)?;
         assert_eq!(result.key, "key");
         assert_eq!(result.field, "field");
@@ -197,7 +197,7 @@ mod tests {
     fn test_hgetall_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*2\r\n$7\r\nhgetall\r\n$3\r\nkey\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let result = HGetAll::try_from(frame)?;
         assert_eq!(result.key, "key");
         Ok(())
@@ -207,7 +207,7 @@ mod tests {
     fn test_hset_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*4\r\n$4\r\nhset\r\n$3\r\nkey\r\n$5\r\nfield\r\n$5\r\nvalue\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let result = HSet::try_from(frame)?;
         assert_eq!(result.key, "key");
         assert_eq!(result.field, "field");
@@ -245,7 +245,7 @@ mod tests {
             sort: true,
         };
         let result = cmd.execute(&backend);
-        let expected = RespArray::new([
+        let expected = Array::new([
             BulkString::from("hello").into(),
             BulkString::from("world").into(),
             BulkString::from("hello1").into(),
@@ -259,7 +259,7 @@ mod tests {
     fn test_hmset_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*12\r\n$5\r\nhmset\r\n$6\r\nmyhash\r\n$1\r\n1\r\n$1\r\n2\r\n$1\r\n3\r\n$1\r\n4\r\n$1\r\n5\r\n$1\r\n6\r\n$1\r\n7\r\n$1\r\n8\r\n$1\r\n9\r\n$2\r\n10\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let result = HMSet::try_from(frame)?;
         assert_eq!(result.key, "myhash");
         let fields = result.fields.0.unwrap();
@@ -281,7 +281,7 @@ mod tests {
     fn test_hmget_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*3\r\n$5\r\nhmget\r\n$6\r\nmyhash\r\n$1\r\n1\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let result = HMGet::try_from(frame)?;
         assert_eq!(result.key, "myhash");
         let fields = result.fields.0.unwrap();
@@ -295,7 +295,7 @@ mod tests {
         let backend = crate::Backend::new();
         let cmd = HMSet {
             key: "myhash".to_string(),
-            fields: RespArray(Some(vec![
+            fields: Array(Some(vec![
                 RespFrame::BulkString(b"1".into()),
                 RespFrame::BulkString(b"2".into()),
                 RespFrame::BulkString(b"3".into()),
@@ -313,7 +313,7 @@ mod tests {
 
         let cmd = HMGet {
             key: "myhash".to_string(),
-            fields: RespArray(Some(vec![
+            fields: Array(Some(vec![
                 RespFrame::BulkString(b"1".into()),
                 RespFrame::BulkString(b"3".into()),
                 RespFrame::BulkString(b"5".into()),
@@ -322,7 +322,7 @@ mod tests {
             ])),
         };
         let result = cmd.execute(&backend);
-        let expected = RespArray::new([
+        let expected = Array::new([
             RespFrame::BulkString(b"2".into()),
             RespFrame::BulkString(b"4".into()),
             RespFrame::BulkString(b"6".into()),

@@ -1,4 +1,4 @@
-use crate::{Backend, RespArray, RespFrame, SimpleString};
+use crate::{Backend, Array, RespFrame, SimpleString};
 use crate::cmd::{CommandError, CommandExecutor, Echo, extract_args, validate_command};
 
 impl CommandExecutor for Echo {
@@ -7,9 +7,9 @@ impl CommandExecutor for Echo {
     }
 }
 
-impl TryFrom<RespArray> for Echo {
+impl TryFrom<Array> for Echo {
     type Error = CommandError;
-    fn try_from(value: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(value: Array) -> Result<Self, Self::Error> {
         validate_command(&value, &["echo"], 1)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match args.next() {
@@ -57,7 +57,7 @@ mod tests {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*2\r\n$4\r\necho\r\n$5\r\nhello\r\n");
 
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
 
         let cmd: Echo = frame.try_into()?;
 

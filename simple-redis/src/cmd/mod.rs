@@ -2,7 +2,7 @@ use enum_dispatch::enum_dispatch;
 use lazy_static::lazy_static;
 use thiserror::Error;
 
-use crate::{Backend, RespArray, RespError, RespFrame};
+use crate::{Backend, Array, RespError, RespFrame};
 
 mod echo;
 mod hmap;
@@ -78,13 +78,13 @@ pub struct HGetAll {
 #[derive(Debug)]
 pub struct HMSet {
     key: String,
-    fields: RespArray,
+    fields: Array,
 }
 
 #[derive(Debug)]
 pub struct HMGet {
     key: String,
-    fields: RespArray,
+    fields: Array,
 }
 
 #[derive(Debug)]
@@ -107,9 +107,9 @@ impl TryFrom<RespFrame> for Command {
     }
 }
 
-impl TryFrom<RespArray> for Command {
+impl TryFrom<Array> for Command {
     type Error = CommandError;
-    fn try_from(v: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(v: Array) -> Result<Self, Self::Error> {
         match v.0 {
             Some(ref data) => {
                 if data.is_empty() {
@@ -149,7 +149,7 @@ impl CommandExecutor for Unrecognized {
 }
 
 fn validate_command(
-    value: &RespArray,
+    value: &Array,
     names: &[&'static str],
     n_args: usize,
 ) -> Result<(), CommandError> {
@@ -193,7 +193,7 @@ fn validate_command(
     }
 }
 
-fn extract_args(value: RespArray, start: usize) -> Result<Vec<RespFrame>, CommandError> {
+fn extract_args(value: Array, start: usize) -> Result<Vec<RespFrame>, CommandError> {
     Ok(value
         .0
         .unwrap()
@@ -207,7 +207,7 @@ mod tests {
     use anyhow::Result;
     use bytes::BytesMut;
 
-    use crate::{RespDecode, RespNull};
+    use crate::{RespDecode, Null};
 
     use super::*;
 
@@ -216,14 +216,14 @@ mod tests {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*2\r\n$3\r\nget\r\n$5\r\nhello\r\n");
 
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
 
         let cmd: Command = frame.try_into()?;
 
         let backend = Backend::new();
 
         let ret = cmd.execute(&backend);
-        assert_eq!(ret, RespFrame::Null(RespNull));
+        assert_eq!(ret, RespFrame::Null(Null));
 
         Ok(())
     }

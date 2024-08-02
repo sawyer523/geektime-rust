@@ -7,10 +7,10 @@ use crate::{RespDecode, RespEncode, RespError, RespFrame};
 use super::{BUF_CAP, calc_total_length, CRLF_LEN, parse_length};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct RespSet(pub(crate) Vec<RespFrame>);
+pub struct Set(pub(crate) Vec<RespFrame>);
 
 // - set: "~<number-of-elements>\r\n<element-1>...<element-n>"
-impl RespEncode for RespSet {
+impl RespEncode for Set {
     fn encode(self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(BUF_CAP);
         buf.extend_from_slice(&format!("~{}\r\n", self.len()).into_bytes());
@@ -22,7 +22,7 @@ impl RespEncode for RespSet {
 }
 
 // - set: "~<number-of-elements>\r\n<element-1>...<element-n>"
-impl RespDecode for RespSet {
+impl RespDecode for Set {
     const PREFIX: &'static str = "~";
     fn decode(buf: &mut BytesMut) -> Result<Self, RespError> {
         let (end, len) = parse_length(buf, Self::PREFIX)?;
@@ -40,7 +40,7 @@ impl RespDecode for RespSet {
             frames.push(RespFrame::decode(buf)?);
         }
 
-        Ok(RespSet::new(frames))
+        Ok(Set::new(frames))
     }
 
     fn expect_length(buf: &[u8]) -> Result<usize, RespError> {
@@ -49,7 +49,7 @@ impl RespDecode for RespSet {
     }
 }
 
-impl Deref for RespSet {
+impl Deref for Set {
     type Target = Vec<RespFrame>;
 
     fn deref(&self) -> &Self::Target {
@@ -57,22 +57,22 @@ impl Deref for RespSet {
     }
 }
 
-impl RespSet {
+impl Set {
     pub fn new(s: impl Into<Vec<RespFrame>>) -> Self {
-        RespSet(s.into())
+        Set(s.into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{BulkString, RespArray, RespFrame};
+    use crate::{BulkString, Array, RespFrame};
 
     use super::*;
 
     #[test]
     fn test_set_encode() {
-        let frame: RespFrame = RespSet::new([
-            RespArray::new([1234.into(), true.into()]).into(),
+        let frame: RespFrame = Set::new([
+            Array::new([1234.into(), true.into()]).into(),
             BulkString::new("world".to_string()).into(),
         ])
         .into();
@@ -87,10 +87,10 @@ mod tests {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"~2\r\n$3\r\nset\r\n$5\r\nhello\r\n");
 
-        let frame = RespSet::decode(&mut buf)?;
+        let frame = Set::decode(&mut buf)?;
         assert_eq!(
             frame,
-            RespSet::new(vec![
+            Set::new(vec![
                 BulkString::new(b"set".to_vec()).into(),
                 BulkString::new(b"hello".to_vec()).into()
             ])

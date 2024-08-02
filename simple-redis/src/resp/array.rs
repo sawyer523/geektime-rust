@@ -7,10 +7,10 @@ use crate::{RespDecode, RespEncode, RespError, RespFrame};
 use super::{BUF_CAP, calc_total_length, CRLF_LEN, parse_length};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct RespArray(pub(crate) Option<Vec<RespFrame>>);
+pub struct Array(pub(crate) Option<Vec<RespFrame>>);
 
 // - array: "*<number-of-elements>\r\n<element-1>...<element-n>"
-impl RespEncode for RespArray {
+impl RespEncode for Array {
     fn encode(self) -> Vec<u8> {
         match self.0 {
             Some(data) => {
@@ -29,11 +29,11 @@ impl RespEncode for RespArray {
 // - array: "*<number-of-elements>\r\n<element-1>...<element-n>"
 // - "*2\r\n$3\r\nget\r\n$5\r\nhello\r\n"
 // FIXME: need to handle incomplete
-impl RespDecode for RespArray {
+impl RespDecode for Array {
     const PREFIX: &'static str = "*";
     fn decode(buf: &mut BytesMut) -> Result<Self, RespError> {
         if buf.starts_with(b"*-1\r\n") {
-            return Ok(RespArray::none());
+            return Ok(Array::none());
         }
 
         let (end, len) = parse_length(buf, Self::PREFIX)?;
@@ -50,7 +50,7 @@ impl RespDecode for RespArray {
             frames.push(RespFrame::decode(buf)?);
         }
 
-        Ok(RespArray::new(frames))
+        Ok(Array::new(frames))
     }
 
     fn expect_length(buf: &[u8]) -> Result<usize, RespError> {
@@ -62,21 +62,31 @@ impl RespDecode for RespArray {
     }
 }
 
-impl RespArray {
+impl Array {
     pub fn new(s: impl Into<Vec<RespFrame>>) -> Self {
-        RespArray(Some(s.into()))
+        Array(Some(s.into()))
     }
 
     pub fn none() -> Self {
-        RespArray(None)
+        Array(None)
     }
 }
 
-impl Deref for RespArray {
+impl Deref for Array {
     type Target = Option<Vec<RespFrame>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<Vec<RespFrame>> for Array {
+    fn from(s: Vec<RespFrame>) -> Self {
+        if s.is_empty() {
+            Array::none()
+        } else {
+            Array::new(s)
+        }
     }
 }
 
@@ -88,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_array_encode() {
-        let frame: RespFrame = RespArray::new(vec![
+        let frame: RespFrame = Array::new(vec![
             BulkString::new("set".to_string()).into(),
             BulkString::new("hello".to_string()).into(),
             BulkString::new("world".to_string()).into(),
@@ -99,7 +109,7 @@ mod tests {
             b"*3\r\n$3\r\nset\r\n$5\r\nhello\r\n$5\r\nworld\r\n"
         );
 
-        let frame: RespFrame = RespArray::none().into();
+        let frame: RespFrame = Array::none().into();
         assert_eq!(&frame.encode(), b"*-1\r\n");
     }
 
@@ -108,20 +118,20 @@ mod tests {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*2\r\n$3\r\nset\r\n$5\r\nhello\r\n");
 
-        let frame = RespArray::decode(&mut buf)?;
-        assert_eq!(frame, RespArray::new([b"set".into(), b"hello".into()]));
+        let frame = Array::decode(&mut buf)?;
+        assert_eq!(frame, Array::new([b"set".into(), b"hello".into()]));
 
         buf.extend_from_slice(b"*2\r\n$3\r\nset\r\n");
-        let ret = RespArray::decode(&mut buf);
+        let ret = Array::decode(&mut buf);
         assert_eq!(ret.unwrap_err(), RespError::NotComplete);
 
         buf.extend_from_slice(b"$5\r\nhello\r\n");
-        let frame = RespArray::decode(&mut buf)?;
-        assert_eq!(frame, RespArray::new([b"set".into(), b"hello".into()]));
+        let frame = Array::decode(&mut buf)?;
+        assert_eq!(frame, Array::new([b"set".into(), b"hello".into()]));
 
         buf.extend_from_slice(b"*-1\r\n");
-        let frame = RespArray::decode(&mut buf)?;
-        assert_eq!(frame, RespArray::none());
+        let frame = Array::decode(&mut buf)?;
+        assert_eq!(frame, Array::none());
 
         Ok(())
     }

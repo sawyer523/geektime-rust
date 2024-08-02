@@ -8,11 +8,11 @@ use crate::{RespDecode, RespEncode, RespError, RespFrame, SimpleString};
 use super::{BUF_CAP, calc_total_length, CRLF_LEN, parse_length};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct RespMap(pub(crate) BTreeMap<String, RespFrame>);
+pub struct Map(pub(crate) BTreeMap<String, RespFrame>);
 
 // - map: "%<number-of-entries>\r\n<key-1><value-1>...<key-n><value-n>"
 // we only support string key which encode to SimpleString
-impl RespEncode for RespMap {
+impl RespEncode for Map {
     fn encode(self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(BUF_CAP);
         buf.extend_from_slice(&format!("%{}\r\n", self.len()).into_bytes());
@@ -25,7 +25,7 @@ impl RespEncode for RespMap {
 }
 
 // - map: "%<number-of-entries>\r\n<key-1><value-1>...<key-n><value-n>"
-impl RespDecode for RespMap {
+impl RespDecode for Map {
     const PREFIX: &'static str = "%";
     fn decode(buf: &mut BytesMut) -> Result<Self, RespError> {
         let (end, len) = parse_length(buf, Self::PREFIX)?;
@@ -37,7 +37,7 @@ impl RespDecode for RespMap {
 
         buf.advance(end + CRLF_LEN);
 
-        let mut frames = RespMap::new();
+        let mut frames = Map::new();
         for _ in 0..len {
             let key = SimpleString::decode(buf)?;
             let value = RespFrame::decode(buf)?;
@@ -53,19 +53,19 @@ impl RespDecode for RespMap {
     }
 }
 
-impl RespMap {
+impl Map {
     pub fn new() -> Self {
-        RespMap(BTreeMap::new())
+        Map(BTreeMap::new())
     }
 }
 
-impl Default for RespMap {
+impl Default for Map {
     fn default() -> Self {
-        RespMap::new()
+        Map::new()
     }
 }
 
-impl Deref for RespMap {
+impl Deref for Map {
     type Target = BTreeMap<String, RespFrame>;
 
     fn deref(&self) -> &Self::Target {
@@ -73,11 +73,18 @@ impl Deref for RespMap {
     }
 }
 
-impl DerefMut for RespMap {
+impl DerefMut for Map {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
+
+impl From<BTreeMap<String, RespFrame>> for Map {
+    fn from(map: BTreeMap<String, RespFrame>) -> Self {
+        Map(map)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{BulkString, RespFrame};
@@ -86,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_map_encode() {
-        let mut map = RespMap::new();
+        let mut map = Map::new();
         map.insert(
             "hello".to_string(),
             BulkString::new("world".to_string()).into(),
@@ -105,8 +112,8 @@ mod tests {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"%2\r\n+hello\r\n$5\r\nworld\r\n+foo\r\n$3\r\nbar\r\n");
 
-        let frame = RespMap::decode(&mut buf)?;
-        let mut map = RespMap::new();
+        let frame = Map::decode(&mut buf)?;
+        let mut map = Map::new();
         map.insert(
             "hello".to_string(),
             BulkString::new(b"world".to_vec()).into(),

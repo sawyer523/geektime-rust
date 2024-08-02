@@ -1,11 +1,11 @@
-use crate::{Backend, cmd::Get, RespArray, RespFrame, RespNull};
+use crate::{Backend, cmd::Get, Array, RespFrame, Null};
 use crate::cmd::{CommandError, CommandExecutor, extract_args, RESP_OK, Set, validate_command};
 
 impl CommandExecutor for Get {
     fn execute(self, backend: &Backend) -> RespFrame {
         backend
             .get(&self.key)
-            .unwrap_or_else(|| RespFrame::Null(RespNull))
+            .unwrap_or_else(|| RespFrame::Null(Null))
     }
 }
 
@@ -16,9 +16,9 @@ impl CommandExecutor for Set {
     }
 }
 
-impl TryFrom<RespArray> for Get {
+impl TryFrom<Array> for Get {
     type Error = CommandError;
-    fn try_from(value: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(value: Array) -> Result<Self, Self::Error> {
         validate_command(&value, &["get"], 1)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match args.next() {
@@ -32,9 +32,9 @@ impl TryFrom<RespArray> for Get {
     }
 }
 
-impl TryFrom<RespArray> for Set {
+impl TryFrom<Array> for Set {
     type Error = CommandError;
-    fn try_from(value: RespArray) -> Result<Self, Self::Error> {
+    fn try_from(value: Array) -> Result<Self, Self::Error> {
         validate_command(&value, &["set"], 2)?;
         let mut args = extract_args(value, 1)?.into_iter();
         match (args.next(), args.next()) {
@@ -81,7 +81,7 @@ mod tests {
     fn test_get_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*2\r\n$3\r\nget\r\n$3\r\nkey\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let resutl = Get::try_from(frame)?;
         assert_eq!(resutl.key, "key");
         Ok(())
@@ -91,7 +91,7 @@ mod tests {
     fn test_set_try_from_array() -> Result<()> {
         let mut buf = BytesMut::new();
         buf.extend_from_slice(b"*3\r\n$3\r\nset\r\n$3\r\nkey\r\n$5\r\nvalue\r\n");
-        let frame = RespArray::decode(&mut buf)?;
+        let frame = Array::decode(&mut buf)?;
         let result = Set::try_from(frame)?;
         assert_eq!(result.key, "key");
         assert_eq!(result.value, RespFrame::BulkString(b"value".into()));
