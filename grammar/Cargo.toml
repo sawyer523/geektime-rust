@@ -1,0 +1,15 @@
+[package]
+name = "grammar"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
+regex = "1.10.5"
+winnow = { version = "0.6.15", features = ["simd"] }
+log = "0.4.22"
+pest = { version = "2.7.11", features = ["pretty-print"] }
+pest_derive = "2.7.11"
