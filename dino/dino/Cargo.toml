@@ -1,0 +1,23 @@
+[package]
+name = "dino"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+askama = "0.12.1"
+blake3 = "1.5.3"
+bundler.workspace = true
+clap = { version = "4.5.13", features = ["derive"] }
+dialoguer = { version = "0.11.0", features = ["completion", "fuzzy-matcher", "fuzzy-select", "history"] }
+dino-server.workspace = true
+enum_dispatch = "0.3.13"
+git2 = { version = "0.19.0", default-features = false }
+glob = "0.3.1"
+notify = "6.1.1"
+notify-debouncer-mini = "0.4.1"
+rquickjs-macro = "0.6.2"
+tokio.workspace = true
+tokio-stream = { version = "0.1.15", features = ["sync"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
