@@ -1,0 +1,23 @@
+[package]
+name = "hackernews"
+version = "0.1.0"
+authors = ["xiaonan chen <sawyer523@163.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
+
+dioxus = { version = "0.5", features = ["web", "router"] }
+
+# Debug
+dioxus-logger = "0.5.1"
+futures = "0.3.30"
+reqwest = { version = "0.12.7", default-features = false, features = ["rustls-tls", "json"] }
+serde = { version = "1.0.208", features = ["derive"] }
+tracing = "0.1.40"
+
+[dev-dependencies]
+tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread", "macros"] }

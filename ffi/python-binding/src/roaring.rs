@@ -51,33 +51,25 @@ impl PyBitmap {
     pub fn union(&self, other: &PyBitmap) -> Self {
         let bitmaps = vec![&self.inner, &other.inner];
         let iter = bitmaps.union();
-        Self {
-            inner: iter,
-        }
+        Self { inner: iter }
     }
-    
-     pub fn intersection(&self, other: &PyBitmap) -> Self {
+
+    pub fn intersection(&self, other: &PyBitmap) -> Self {
         let bitmaps = vec![&self.inner, &other.inner];
         let iter = bitmaps.intersection();
-        Self {
-            inner: iter,
-        }
+        Self { inner: iter }
     }
 
-    pub fn difference(&self, other: &PyBitmap) -> Self{
+    pub fn difference(&self, other: &PyBitmap) -> Self {
         let bitmaps = vec![&self.inner, &other.inner];
         let iter = bitmaps.difference();
-        Self {
-            inner: iter,
-        }
+        Self { inner: iter }
     }
 
-    pub fn symmetric_difference(&self, other: &PyBitmap) -> Self{
+    pub fn symmetric_difference(&self, other: &PyBitmap) -> Self {
         let bitmaps = vec![&self.inner, &other.inner];
         let iter = bitmaps.symmetric_difference();
-        Self {
-            inner: iter,
-        }
+        Self { inner: iter }
     }
 
     pub fn __str__(&self) -> String {
