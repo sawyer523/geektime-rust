@@ -1,0 +1,3 @@
+[workspace]
+members = ["hackernews", "src-tauri"]
+resolver = "2"
