@@ -49,8 +49,6 @@ pub async fn get_comment_by_id(id: i64) -> Result<Comment> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[tokio::test]
     async fn get_top_stories_should_work() {
         let stories = get_top_stories(3).await.unwrap();
