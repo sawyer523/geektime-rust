@@ -2,13 +2,13 @@ use std::{fs, path::Path, time::Duration, vec};
 
 use clap::Parser;
 use notify::RecursiveMode;
-use notify_debouncer_mini::{DebounceEventResult, new_debouncer};
+use notify_debouncer_mini::{new_debouncer, DebounceEventResult};
 use tokio::sync::mpsc::channel;
-use tokio_stream::{StreamExt, wrappers::ReceiverStream};
+use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use tracing::{info, level_filters::LevelFilter, warn};
-use tracing_subscriber::{fmt::Layer, Layer as _, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{fmt::Layer, layer::SubscriberExt, util::SubscriberInitExt, Layer as _};
 
-use dino_server::{ProjectConfig, start_server, SwappableAppRouter, TenentRouter};
+use dino_server::{start_server, ProjectConfig, SwappableAppRouter, TenentRouter};
 
 use crate::{build_project, CmdExector};
 
@@ -31,7 +31,7 @@ impl CmdExector for RunOpts {
 
         tokio::spawn(async_watch(".", router));
 
-        start_server(self.port, routers).await?;
+        start_server(self.port, routers, code).await?;
 
         Ok(())
     }

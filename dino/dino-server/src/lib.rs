@@ -6,8 +6,8 @@ use axum::{
     extract::{Host, Query, State},
     http::{request::Parts, Response},
     response::IntoResponse,
-    Router,
     routing::any,
+    Router,
 };
 use dashmap::DashMap;
 use indexmap::IndexMap;
