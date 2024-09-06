@@ -22,7 +22,7 @@ chat-core = { path = "./chat_core" }
 chat-server = { path = "./chat_server" }
 notify-server = { path = "./notify_server" }
 tower = "0.4.13"
-tower-http = { version = "0.5.2", features = ["compression-full", "trace", "fs"] }
+tower-http = { version = "0.5.2", features = ["compression-full", "cors", "trace", "fs"] }
 axum-extra = { version = "0.9.3", features = ["typed-header"] }
 jwt-simple = "0.12.9"
 utoipa = { version = "4.2.3", features = ["axum_extras", "chrono"] }

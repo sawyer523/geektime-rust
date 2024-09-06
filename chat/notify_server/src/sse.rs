@@ -1,16 +1,16 @@
-use std::{convert::Infallible, time::Duration};
 use std::sync::Arc;
+use std::{convert::Infallible, time::Duration};
 
 use axum::{
-    Extension,
     extract::State,
-    response::{Sse, sse::Event},
+    response::{sse::Event, Sse},
+    Extension,
 };
+use chat_core::User;
 use futures::Stream;
 use tokio::sync::broadcast;
-use tokio_stream::{StreamExt, wrappers::BroadcastStream};
-
-use chat_core::User;
+use tokio_stream::{wrappers::BroadcastStream, StreamExt};
+use tracing::debug;
 
 use crate::{AppEvent, AppState};
 
@@ -56,6 +56,7 @@ pub(crate) async fn sse_handler(
                     AppEvent::NewMessage(_) => "NewMessage",
                 };
                 let v = serde_json::to_string(&v).expect("failed to serialize event");
+                debug!("Sending event {}: {:?}", name, v);
                 yield Ok(Event::default().data(v).event(name));
             }
         }

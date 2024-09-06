@@ -1,15 +1,17 @@
-use std::{fmt, fs};
 use std::ops::Deref;
 use std::sync::Arc;
+use std::{fmt, fs};
 
 use anyhow::Context;
+use axum::http::Method;
 use axum::middleware::from_fn_with_state;
-use axum::Router;
 use axum::routing::{get, post};
+use axum::Router;
 use sqlx::PgPool;
+use tower_http::cors::{Any, CorsLayer};
 use utoipa::ToSchema;
 
-use chat_core::{DecodingKey, EncodingKey, set_layer, TokenVerifier, User, verify_token};
+use chat_core::{set_layer, verify_token, DecodingKey, EncodingKey, TokenVerifier, User};
 pub use config::AppConfig;
 pub use error::{AppError, ErrorOutput};
 pub use models::*;
@@ -55,6 +57,17 @@ pub async fn get_router(state: AppState) -> Result<Router, AppError> {
         .layer(from_fn_with_state(state.clone(), verify_chat))
         .route("/", get(list_chat_handler).post(create_chat_handler));
 
+    let cors = CorsLayer::new()
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PATCH,
+            Method::DELETE,
+            Method::PUT,
+            Method::OPTIONS,
+        ])
+        .allow_origin(Any)
+        .allow_headers(Any);
     let api = Router::new()
         .nest("/chats", chat)
         .route("/users", get(list_chat_user_handler))
@@ -62,7 +75,8 @@ pub async fn get_router(state: AppState) -> Result<Router, AppError> {
         .route("/files/:ws_id/*path", get(download_handler))
         .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
         .route("/signin", post(signin_handler))
-        .route("/signup", post(signup_handler));
+        .route("/signup", post(signup_handler))
+        .layer(cors);
 
     let app = Router::new()
         .openapi()

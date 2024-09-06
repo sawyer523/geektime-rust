@@ -1,7 +1,7 @@
 use std::mem;
 
-use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use argon2::password_hash::{rand_core::OsRng, SaltString};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -66,6 +66,9 @@ impl AppState {
                 let is_valid =
                     verify_password(&input.password, &password_hash.unwrap_or_default())?;
                 if is_valid {
+                    // load ws_name, ws should exist
+                    let ws = self.find_workspace_by_id(user.ws_id as _).await?.unwrap();
+                    user.ws_name = ws.name;
                     Ok(Some(user))
                 } else {
                     Ok(None)
@@ -88,7 +91,7 @@ impl AppState {
         };
 
         let password_hash = hash_password(&input.password)?;
-        let user = sqlx::query_as::<_, User>(
+        let mut user = sqlx::query_as::<_, User>(
             r#"
             INSERT INTO users (ws_id, email,fullname, password_hash)
             VALUES ($1, $2, $3, $4)
@@ -101,6 +104,8 @@ impl AppState {
         .bind(password_hash)
         .fetch_one(&self.pool)
         .await?;
+
+        user.ws_name = ws.name.clone();
 
         if ws.owner_id == 0 {
             self.update_workspace_owner(ws.id as _, user.id as _)

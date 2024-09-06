@@ -5,13 +5,13 @@
         <span>{{ workspaceName }}</span>
         <button class="text-gray-400 ml-1">&nbsp;▼</button>
       </div>
-      <div v-if="dropdownVisible" class="absolute top-12 left-0 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
+      <div v-if="dropdownVisible"
+           class="absolute top-12 left-0 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
         <ul class="py-1">
           <li @click="logout" class="px-4 py-2 hover:bg-gray-700 cursor-pointer">Logout</li>
-          <!-- Add more dropdown items here as needed -->
         </ul>
       </div>
-      <button @click="addChannel" class="text-gray-400 text-xl hover:text-white">+</button>
+      <button @click="showAddChannelModal" class="text-gray-400 text-xl hover:text-white">+</button>
     </div>
 
     <div class="mb-6">
@@ -30,7 +30,7 @@
         <li v-for="channel in singleChannels" :key="channel.id" @click="selectChannel(channel.id)"
             :class="['flex items-center px-2 py-1 rounded cursor-pointer', { 'bg-blue-600': channel.id === activeChannelId }]">
           <img :src="`https://ui-avatars.com/api/?name=${channel.recipient.fullname.replace(' ', '+')}`"
-               class="w-6 h-6 rounded-full mr-2" alt="Avatar" />
+               class="w-6 h-6 rounded-full mr-2" alt="Avatar"/>
           {{ channel.recipient.fullname }}
         </li>
       </ul>
@@ -76,12 +76,8 @@ export default {
         this.dropdownVisible = false;
       }
     },
-    addChannel() {
-      const newChannel = {
-        id: Date.now().toString(),
-        name: `Channel ${this.channels.length + 1}`,
-      };
-      this.$store.dispatch('addChannel', newChannel);
+    showAddChannelModal() {
+      this.$root.isAddChannelModalVisible = true;
     },
     selectChannel(channelId) {
       this.$store.dispatch('setActiveChannel', channelId);

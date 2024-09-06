@@ -1,11 +1,11 @@
-use axum::{
-    Extension,
-    extract::{Multipart, Path, State},
-    http::HeaderMap,
-    Json, response::IntoResponse,
-};
 use axum::extract::Query;
 use axum::http::StatusCode;
+use axum::{
+    extract::{Multipart, Path, State},
+    http::HeaderMap,
+    response::IntoResponse,
+    Extension, Json,
+};
 use axum_macros::debug_handler;
 use tokio::fs;
 use tracing::{info, warn};
@@ -17,7 +17,7 @@ use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessages};
 #[debug_handler]
 #[utoipa::path(
     post,
-    path = "/api/chats/{id}/messages",
+    path = "/api/chats/{id}",
     tag = "message",
     params(
         ("id" = u64, Path, description = "Chat id"),

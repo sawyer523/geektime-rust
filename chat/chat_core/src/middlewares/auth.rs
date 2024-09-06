@@ -2,8 +2,8 @@ use axum::extract::{FromRequestParts, Query, Request, State};
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Bearer;
+use axum_extra::headers::Authorization;
 use axum_extra::TypedHeader;
 use serde::Deserialize;
 use tracing::warn;
@@ -12,7 +12,7 @@ use crate::TokenVerifier;
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
-    access_token: String,
+    token: String,
 }
 
 pub async fn verify_token<T>(State(state): State<T>, req: Request, next: Next) -> Response
@@ -26,7 +26,7 @@ where
             Err(e) => {
                 if e.is_missing() {
                     match Query::<Params>::from_request_parts(&mut parts, &state).await {
-                        Ok(Query(params)) => params.access_token.clone(),
+                        Ok(Query(params)) => params.token.clone(),
                         Err(e) => {
                             let msg = format!("parse query params failed: {}", e);
                             warn!(msg);
@@ -65,8 +65,8 @@ mod tests {
     use axum::http::StatusCode;
     use axum::middleware::from_fn_with_state;
     use axum::response::IntoResponse;
-    use axum::Router;
     use axum::routing::get;
+    use axum::Router;
     use tower::ServiceExt;
 
     use crate::{DecodingKey, EncodingKey, User};
@@ -119,7 +119,7 @@ mod tests {
 
         // good token in query params
         let req = Request::builder()
-            .uri(format!("/?access_token={}", token))
+            .uri(format!("/?token={}", token))
             .body(Body::empty())?;
         let res = app.clone().oneshot(req).await?;
         assert_eq!(res.status(), StatusCode::OK);
@@ -139,7 +139,7 @@ mod tests {
 
         // bad token in query params
         let req = Request::builder()
-            .uri("/?access_token=bad-token")
+            .uri("/?token=bad-token")
             .body(Body::empty())?;
         let res = app.oneshot(req).await?;
         assert_eq!(res.status(), StatusCode::FORBIDDEN);

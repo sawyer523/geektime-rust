@@ -38,6 +38,14 @@ const initSSE = (store) => {
         store.commit('addMessage', {channelId: data.chatId, message: data});
     });
 
+    sse.addEventListener("NewChat", (e) => {
+        let data = JSON.parse(e.data);
+        console.log('message:', e.data);
+        delete data.event;
+        // add to channels
+        store.commit('addChannel', data);
+    });
+
     sse.onmessage = (event) => {
         console.log('got event:', event);
         // const data = JSON.parse(event.data);

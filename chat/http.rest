@@ -1,47 +1,72 @@
-### signup user1
+### signup user
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
 {
   "workspace": "acme",
-  "fullname": "John Doe",
-  "email": "JohnDoe@acme.org",
-  "password": "password"
+  "fullname": "Tyr Chen",
+  "email": "tchen@acme.org",
+  "password": "123456"
 }
 
-### signup user2
+### signup user
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
 {
   "workspace": "acme",
-  "fullname": "Alice Doe",
-  "email": "AliceDoe@acme.org",
-  "password": "password"
+  "fullname": "Alice Chen",
+  "email": "alice@acme.org",
+  "password": "123456"
 }
 
-### signup user3
+### signup user
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
 {
   "workspace": "acme",
-  "fullname": "Bob",
-  "email": "Bob@acme.org",
-  "password": "password"
+  "fullname": "Bob Hua",
+  "email": "bob@acme.org",
+  "password": "123456"
 }
 
-### login user1
+### signin user (invalid)
 POST http://localhost:6688/api/signin
 Content-Type: application/json
 
 {
-  "email": "JohnDoe@acme.org",
-  "password": "password"
+  "email": "tchen@acme.org",
+  "password": "a123456"
+}
+
+### signin user (valid)
+
+# @name signin
+POST http://localhost:6688/api/signin
+Content-Type: application/json
+
+{
+  "email": "tchen@acme.org",
+  "password": "123456"
 }
 
 > {%
     client.global.set("token", response.body.token)
+%}
+
+### signin user (valid)
+# @name signin1
+POST http://localhost:6688/api/signin
+Content-Type: application/json
+
+{
+  "email": "bob@acme.org",
+  "password": "123456"
+}
+
+> {%
+    client.global.set("token1", response.body.token)
 %}
 
 ### create chat
@@ -50,7 +75,21 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "acme",
+  "name": "project S",
+  "members": [
+    1,
+    2,
+    3
+  ],
+  "public": false
+}
+
+### create direct chat
+POST http://localhost:6688/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
   "members": [
     1,
     2
@@ -58,7 +97,35 @@ Authorization: Bearer {{token}}
   "public": false
 }
 
-### chat api
+### create chats without me
+POST http://localhost:6688/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{
+  "name": "project Y",
+  "members": [
+    2,
+    3
+  ],
+  "public": false
+}
+
+### create direct chat without me
+POST http://localhost:6688/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{
+  "members": [
+    2,
+    3
+  ],
+  "public": false
+}
+
+
+### get chat list
 GET http://localhost:6688/api/chats
 Authorization: Bearer {{token}}
 
@@ -66,26 +133,8 @@ Authorization: Bearer {{token}}
 GET http://localhost:6688/api/users
 Authorization: Bearer {{token}}
 
-### update chat
-PATCH http://localhost:6688/api/chats/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
 
-{
-  "name": "acme4",
-  "members": [
-    1,
-    2,
-    3
-  ],
-  "public": true
-}
-
-### Delete chat
-DELETE http://localhost:6688/api/chats/2
-Authorization: Bearer {{token}}
-
-### upload a file
+### upload files
 POST http://localhost:6688/api/upload
 Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=Boundary
@@ -98,8 +147,6 @@ Content-Type: application/octet-stream
 --Boundary
 Content-Disposition: form-data; filename="hello.txt"
 
-Hello world!
---Boundary--
 
 ### get file hello.txt
 GET http://localhost:6688/api/files/1/c35/419/65321acb48b82be537efafba581c962099.yml
@@ -111,13 +158,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "content": "Hello world!",
+  "content": "Hello, World!",
   "files": []
 }
 
 ### get messages
 GET http://localhost:6688/api/chats/1/messages?limit=6&last_id=5
 Authorization: Bearer {{token}}
-
-### get sse
-GET http://localhost:6687/events?access_token={{token}}

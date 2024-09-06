@@ -1,18 +1,20 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
+use axum::http::Method;
+use axum::middleware::from_fn_with_state;
 use axum::{
     response::{Html, IntoResponse},
-    Router,
     routing::get,
+    Router,
 };
-use axum::middleware::from_fn_with_state;
-use dashmap::DashMap;
-use tokio::sync::broadcast;
-
-use chat_core::{DecodingKey, TokenVerifier, User, verify_token};
+use chat_core::{verify_token, DecodingKey, TokenVerifier, User};
 pub use config::AppConfig;
+use dashmap::DashMap;
 pub use notif::*;
+use tokio::sync::broadcast;
+use tower_http::cors;
+use tower_http::cors::CorsLayer;
 
 use crate::error::AppError;
 use crate::sse::sse_handler;
@@ -38,9 +40,24 @@ pub struct AppStateInner {
 pub async fn get_router(config: AppConfig) -> anyhow::Result<Router> {
     let state = AppState::new(config);
     notif::setup_pg_listener(state.clone()).await?;
+
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PATCH,
+            Method::DELETE,
+            Method::PUT,
+            Method::OPTIONS,
+        ])
+        .allow_origin(cors::Any)
+        .allow_headers(cors::Any);
+
     let app = Router::new()
         .route("/events", get(sse_handler))
         .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
+        .layer(cors)
         .route("/", get(index_handler))
         .with_state(state.clone());
 

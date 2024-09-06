@@ -145,7 +145,8 @@ export default createStore({
             commit('setToken', null);
             commit('setWorkspace', '');
             commit('setChannels', []);
-            commit('setMessages', {});
+            // fix: TypeError: undefined is not an object (evaluating 'messages.map')
+            commit('setMessages', {channelId: null, messages: []});
 
             // close SSE
             this.dispatch('closeSSE');
@@ -182,6 +183,24 @@ export default createStore({
                 }
             }
         },
+        async createChannel({state, commit}, {name, members, isPublic}) {
+            try {
+                const response = await axios.post(`${getUrlBase()}/chats`, {
+                    name,
+                    members,
+                    public: isPublic,
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${state.token}`,
+                    },
+                });
+                console.log('Channel created:', response.data);
+                return response.data;
+            } catch (error) {
+                console.error('Failed to create channel:', error);
+                throw error;
+            }
+        },
         async sendMessage({state, commit}, payload) {
             try {
                 const response = await axios.post(`${getUrlBase()}/chats/${payload.chatId}`, payload, {
@@ -196,6 +215,7 @@ export default createStore({
                 throw error;
             }
         },
+        // get all users in the workspace
         addMessage({commit}, {channelId, message}) {
             commit('addMessage', {channelId, message});
         },
