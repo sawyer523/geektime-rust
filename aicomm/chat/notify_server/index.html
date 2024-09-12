@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>SSE handler</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+</head>
+<body>
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+
+<h1>Server Sent Events</h1>
+
+<script lang="javascript">
+    let token =
+        "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTg4OTI0ODksImV4cCI6MTcxOTQ5NzI4OSwibmJmIjoxNzE4ODkyNDg5LCJpc3MiOiJjaGF0X3NlcnZlciIsImF1ZCI6ImNoYXRfd2ViIiwiaWQiOjEsIndzX2lkIjoxLCJmdWxsbmFtZSI6IkpvaG4gRG9lIiwiZW1haWwiOiJKb2huRG9lQGFjbWUub3JnIiwiY3JlYXRlZF9hdCI6IjIwMjQtMDYtMjBUMTM6MjQ6MDIuODg4NDUzWiJ9.F0Z14upNjpRw5_wjwtfId2C8g3SbJMN0ZQPOZWsjl2ufwd2W9rlCdyKIiS5flV_k8q_n5uzuDcqLwup-I-DVDA";
+    var source = new EventSource("/events?token=" + token);
+    source.onmessage = function(event) {
+        console.log("Got:", event.data);
+    };
+</script>
+</body>
+</html>
