@@ -1,7 +1,7 @@
 {
   "productName": "chatapp",
   "version": "0.1.0",
-  "identifier": "com.cxn.chatapp",
+  "identifier": "com.acme.chatapp",
   "build": {
     "beforeDevCommand": "yarn dev",
     "devUrl": "http://localhost:1420",
@@ -9,13 +9,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "chatapp",
-        "width": 800,
-        "height": 600
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }
