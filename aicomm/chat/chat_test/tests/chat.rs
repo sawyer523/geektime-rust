@@ -1,6 +1,5 @@
-use std::{net::SocketAddr, time::Duration};
-
 use anyhow::Result;
+use chat_core::{Chat, ChatType, Message};
 use futures::StreamExt;
 use reqwest::{
     multipart::{Form, Part},
@@ -9,9 +8,24 @@ use reqwest::{
 use reqwest_eventsource::{Event, EventSource};
 use serde::Deserialize;
 use serde_json::json;
+use std::{net::SocketAddr, time::Duration};
 use tokio::{net::TcpListener, time::sleep};
 
-use chat_core::{Chat, ChatType, Message};
+/*
+test1:
+    name: user 1 create chat
+    steps:
+        - signin
+            email: tchen@acme.org
+            password: 123456
+        - create_chat
+            name: test
+            members: [1, 2]
+        - create_message
+            chat_id: 1
+            content: hello
+            files: [Cargo.toml]
+*/
 
 #[derive(Debug, Deserialize)]
 struct AuthToken {
@@ -37,7 +51,6 @@ async fn chat_server_should_work() -> Result<()> {
     let chat = chat_server.create_chat().await?;
     let _msg = chat_server.create_message(chat.id as u64).await?;
     sleep(Duration::from_secs(1)).await;
-
     Ok(())
 }
 
@@ -48,6 +61,7 @@ impl NotifyServer {
         let app = notify_server::get_router(config).await?;
         let listener = TcpListener::bind(WILD_ADDR).await?;
         let addr = listener.local_addr()?;
+
         tokio::spawn(async move {
             axum::serve(listener, app.into_make_service())
                 .await
@@ -95,18 +109,23 @@ impl ChatServer {
         let app = chat_server::get_router(state).await?;
         let listener = TcpListener::bind(WILD_ADDR).await?;
         let addr = listener.local_addr()?;
+
         tokio::spawn(async move {
             axum::serve(listener, app.into_make_service())
                 .await
                 .unwrap();
         });
 
+        let client = reqwest::Client::new();
+
         let mut ret = Self {
             addr,
+            client,
             token: "".to_string(),
-            client: reqwest::Client::new(),
         };
+
         ret.token = ret.signin().await?;
+
         Ok(ret)
     }
 
@@ -115,9 +134,10 @@ impl ChatServer {
             .client
             .post(format!("http://{}/api/signin", self.addr))
             .header("Content-Type", "application/json")
-            .body(r#"{"email":"alice@acme.org","password":"password"}"#)
+            .body(r#"{"email": "tchen@acme.org","password":"123456"}"#)
             .send()
             .await?;
+
         assert_eq!(res.status(), 200);
         let ret: AuthToken = res.json().await?;
         Ok(ret.token)
@@ -129,13 +149,12 @@ impl ChatServer {
             .post(format!("http://{}/api/chats", self.addr))
             .header("Authorization", format!("Bearer {}", self.token))
             .header("Content-Type", "application/json")
-            .body(r#"{"name": "chat1", "members": [1, 2], "public": false}"#)
-            .send()
-            .await?;
-        assert_eq!(res.status(), 201);
+            .body(r#"{"name": "test", "members": [1, 2], "public": false}"#);
+        let res = res.send().await?;
+        assert_eq!(res.status(), StatusCode::CREATED);
         let chat: Chat = res.json().await?;
-        assert_eq!(chat.name.as_ref().unwrap(), "chat1");
-        assert_eq!(chat.members, [1, 2]);
+        assert_eq!(chat.name.as_ref().unwrap(), "test");
+        assert_eq!(chat.members, vec![1, 2]);
         assert_eq!(chat.r#type, ChatType::PrivateChannel);
 
         Ok(chat)

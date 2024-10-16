@@ -38,11 +38,11 @@ mod tests {
     use axum::http::StatusCode;
     use axum::middleware::from_fn_with_state;
     use axum::response::IntoResponse;
-    use axum::Router;
     use axum::routing::get;
+    use axum::Router;
     use tower::ServiceExt;
 
-    use chat_core::verify_token;
+    use chat_core::middlewares::verify_token;
 
     use super::*;
 

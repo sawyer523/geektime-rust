@@ -2,11 +2,11 @@ use std::fmt;
 
 use axum::middleware::from_fn;
 use axum::Router;
-use tower_http::{
-    LatencyUnit,
-    trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer},
-};
 use tower_http::compression::CompressionLayer;
+use tower_http::{
+    trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer},
+    LatencyUnit,
+};
 use tracing::Level;
 
 pub use auth::verify_token;
@@ -19,9 +19,9 @@ mod auth;
 mod request_id;
 mod service_time;
 
-pub trait TokenVerifier {
+pub trait TokenVerify {
     type Error: fmt::Debug;
-    fn verify(&self, token: &str) -> anyhow::Result<User, Self::Error>;
+    fn verify(&self, token: &str) -> Result<User, Self::Error>;
 }
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
@@ -38,7 +38,7 @@ pub fn set_layer(app: Router) -> Router {
                     .latency_unit(LatencyUnit::Micros),
             ),
     )
-    .layer(CompressionLayer::new().gzip(true).br(true).deflate(true))
-    .layer(from_fn(set_request_id))
-    .layer(ServiceTimeLayer)
+        .layer(CompressionLayer::new().gzip(true).br(true).deflate(true))
+        .layer(from_fn(set_request_id))
+        .layer(ServiceTimeLayer)
 }

@@ -8,7 +8,10 @@ use axum::{
     routing::get,
     Router,
 };
-use chat_core::{verify_token, DecodingKey, TokenVerifier, User};
+use chat_core::{
+    middlewares::{verify_token, TokenVerify},
+    DecodingKey, User,
+};
 pub use config::AppConfig;
 use dashmap::DashMap;
 pub use notif::*;
@@ -59,7 +62,7 @@ pub async fn get_router(config: AppConfig) -> anyhow::Result<Router> {
         .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
         .layer(cors)
         .route("/", get(index_handler))
-        .with_state(state.clone());
+        .with_state(state);
 
     Ok(app)
 }
@@ -68,7 +71,7 @@ async fn index_handler() -> impl IntoResponse {
     Html(INDEX_HTML)
 }
 
-impl TokenVerifier for AppState {
+impl TokenVerify for AppState {
     type Error = AppError;
 
     fn verify(&self, token: &str) -> Result<User, Self::Error> {

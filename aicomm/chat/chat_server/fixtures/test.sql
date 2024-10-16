@@ -1,31 +1,22 @@
--- insert 3 workspace
+-- insert 3 workspaces
 INSERT INTO workspaces(name, owner_id)
 VALUES ('acme', 0),
        ('foo', 0),
        ('bar', 0);
 
--- insert 5 users, all with the same password
-INSERT INTO users(fullname, email, password_hash, ws_id)
-VALUES ('Alice',
-        'alice@acme.org',
-        '$argon2id$v=19$m=19456,t=2,p=1$SAfkPh4FHkLIWKwUXTfv5A$0mgR5YSCfwvBi44UecVGQ6/mxzKvG76HRCm5ovJcjz8',
-        1),
-       ('Bob',
-        'bob@acme.org',
-        '$argon2id$v=19$m=19456,t=2,p=1$SAfkPh4FHkLIWKwUXTfv5A$0mgR5YSCfwvBi44UecVGQ6/mxzKvG76HRCm5ovJcjz8',
-        1),
-       ('Charlie',
-        'charlie@acme.org',
-        '$argon2id$v=19$m=19456,t=2,p=1$SAfkPh4FHkLIWKwUXTfv5A$0mgR5YSCfwvBi44UecVGQ6/mxzKvG76HRCm5ovJcjz8',
-        1),
-       ('David',
-        'david@acme.org',
-        '$argon2id$v=19$m=19456,t=2,p=1$SAfkPh4FHkLIWKwUXTfv5A$0mgR5YSCfwvBi44UecVGQ6/mxzKvG76HRCm5ovJcjz8',
-        1),
-       ('Eve',
-        'eve@acme.org',
-        '$argon2id$v=19$m=19456,t=2,p=1$SAfkPh4FHkLIWKwUXTfv5A$0mgR5YSCfwvBi44UecVGQ6/mxzKvG76HRCm5ovJcjz8',
-        1);
+-- insert 5 users, all with hashed password '123456'
+INSERT INTO users(ws_id, email, fullname, password_hash)
+VALUES (1, 'tchen@acme.org', 'Tyr Chen',
+        '$argon2id$v=19$m=19456,t=2,p=1$MxGhY+ib/kplwBPLa7u2ug$c5h9u7Sc8Px8J5+qgNdOjSY7ZJO2QN4rugKpapGW4XU'),
+       (1, 'alice@acme.org', 'Alice Chen',
+        '$argon2id$v=19$m=19456,t=2,p=1$MxGhY+ib/kplwBPLa7u2ug$c5h9u7Sc8Px8J5+qgNdOjSY7ZJO2QN4rugKpapGW4XU'),
+       (1, 'bob@acme.org', 'Bob Chen',
+        '$argon2id$v=19$m=19456,t=2,p=1$MxGhY+ib/kplwBPLa7u2ug$c5h9u7Sc8Px8J5+qgNdOjSY7ZJO2QN4rugKpapGW4XU'),
+       (1, 'charlie@acme.org', 'Charlie Chen',
+        '$argon2id$v=19$m=19456,t=2,p=1$MxGhY+ib/kplwBPLa7u2ug$c5h9u7Sc8Px8J5+qgNdOjSY7ZJO2QN4rugKpapGW4XU'),
+       (1, 'daisy@acme.org', 'Daisy Chen',
+        '$argon2id$v=19$m=19456,t=2,p=1$MxGhY+ib/kplwBPLa7u2ug$c5h9u7Sc8Px8J5+qgNdOjSY7ZJO2QN4rugKpapGW4XU');
+
 
 -- insert 4 chats
 -- insert public/private channel
@@ -35,8 +26,14 @@ VALUES (1, 'general', 'public_channel', '{1,2,3,4,5}'),
 
 -- insert unnamed chat
 INSERT INTO chats(ws_id, type, members)
-VALUES (1, 'group', '{1,2,3,4}'),
-       (1, 'single', '{1,2}');
+VALUES (1, 'single', '{1,2}'),
+       (1, 'group', '{1,3,4}');
+
+-- insert agent to chat
+INSERT INTO chat_agents(chat_id, name, type, prompt, args)
+VALUES (1, 'translation', 'proxy',
+        'If language is Chinese, translate to English, if language is English, translate to Chinese. Please reply with the translated content directly. No explanation is needed. Here is the content: ',
+        '{}');
 
 INSERT INTO messages(chat_id, sender_id, content)
 VALUES (1, 1, 'Hello, world!'),

@@ -51,15 +51,15 @@ impl AppState {
             r#"
             INSERT INTO messages (chat_id, sender_id, content, files)
             VALUES ($1, $2, $3, $4)
-            RETURNING id, chat_id, sender_id, content, files, created_at
+            RETURNING id, chat_id, sender_id, content, modified_content, files, created_at
             "#,
         )
-        .bind(chat_id as i64)
-        .bind(user_id as i64)
-        .bind(&input.content)
-        .bind(&input.files)
-        .fetch_one(&self.pool)
-        .await?;
+            .bind(chat_id as i64)
+            .bind(user_id as i64)
+            .bind(&input.content)
+            .bind(&input.files)
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(message)
     }
@@ -77,7 +77,7 @@ impl AppState {
         };
         let messages = sqlx::query_as(
             r#"
-            SELECT id, chat_id, sender_id, content, files, created_at
+            SELECT id, chat_id, sender_id, content, modified_content, files, created_at
             FROM messages
             WHERE chat_id = $1
             AND id < $2
@@ -85,11 +85,11 @@ impl AppState {
             LIMIT $3
             "#,
         )
-        .bind(chat_id as i64)
-        .bind(last_id as i64)
-        .bind(limit)
-        .fetch_all(&self.pool)
-        .await?;
+            .bind(chat_id as i64)
+            .bind(last_id as i64)
+            .bind(limit)
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(messages)
     }

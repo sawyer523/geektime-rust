@@ -11,7 +11,10 @@ use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 use utoipa::ToSchema;
 
-use chat_core::{set_layer, verify_token, DecodingKey, EncodingKey, TokenVerifier, User};
+use chat_core::{
+    middlewares::{set_layer, verify_token, TokenVerify},
+    DecodingKey, EncodingKey, User,
+};
 pub use config::AppConfig;
 pub use error::{AppError, ErrorOutput};
 pub use models::*;
@@ -94,7 +97,7 @@ impl Deref for AppState {
     }
 }
 
-impl TokenVerifier for AppState {
+impl TokenVerify for AppState {
     type Error = AppError;
 
     fn verify(&self, token: &str) -> Result<User, Self::Error> {

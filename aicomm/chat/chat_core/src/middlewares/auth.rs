@@ -8,7 +8,7 @@ use axum_extra::TypedHeader;
 use serde::Deserialize;
 use tracing::warn;
 
-use crate::TokenVerifier;
+use super::TokenVerify;
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -17,7 +17,7 @@ pub struct Params {
 
 pub async fn verify_token<T>(State(state): State<T>, req: Request, next: Next) -> Response
 where
-    T: TokenVerifier + Clone + Send + Sync + 'static,
+    T: TokenVerify + Clone + Send + Sync + 'static,
 {
     let (mut parts, body) = req.into_parts();
     let token =
@@ -81,7 +81,7 @@ mod tests {
         dk: DecodingKey,
     }
 
-    impl TokenVerifier for AppState {
+    impl TokenVerify for AppState {
         type Error = jwt_simple::Error;
 
         fn verify(&self, token: &str) -> Result<User, Self::Error> {

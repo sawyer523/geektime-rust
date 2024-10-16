@@ -201,6 +201,29 @@ export default createStore({
                 throw error;
             }
         },
+        async uploadFiles({ state, commit }, files) {
+            try {
+              const formData = new FormData();
+              files.forEach(file => {
+                formData.append(`files`, file);
+              });
+      
+              const response = await network(this, 'post', '/upload', formData, {
+                'Authorization': `Bearer ${state.token}`,
+                'Content-Type': 'multipart/form-data'
+              });
+      
+              const uploadedFiles = response.data.map(path => ({
+                path,
+                fullUrl: `${getUrlBase()}${path}?token=${state.token}`
+              }));
+      
+              return uploadedFiles;
+            } catch (error) {
+              console.error('Failed to upload files:', error);
+              throw error;
+            }
+          },
         async sendMessage({state, commit}, payload) {
             try {
                 const response = await axios.post(`${getUrlBase()}/chats/${payload.chatId}`, payload, {
