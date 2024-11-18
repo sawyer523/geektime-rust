@@ -1,4 +1,5 @@
 ### signup user
+
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
@@ -10,6 +11,7 @@ Content-Type: application/json
 }
 
 ### signup user
+
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
@@ -21,6 +23,7 @@ Content-Type: application/json
 }
 
 ### signup user
+
 POST http://localhost:6688/api/signup
 Content-Type: application/json
 
@@ -32,6 +35,7 @@ Content-Type: application/json
 }
 
 ### signin user (invalid)
+
 POST http://localhost:6688/api/signin
 Content-Type: application/json
 
@@ -56,6 +60,7 @@ Content-Type: application/json
 %}
 
 ### signin user (valid)
+
 # @name signin1
 POST http://localhost:6688/api/signin
 Content-Type: application/json
@@ -75,11 +80,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "name": "project S",
+  "name": "project X",
   "members": [
     1,
-    2,
-    3
+    2
   ],
   "public": false
 }
@@ -126,33 +130,46 @@ Authorization: Bearer {{token1}}
 
 
 ### get chat list
+
 GET http://localhost:6688/api/chats
 Authorization: Bearer {{token}}
 
 ### get user list
+
 GET http://localhost:6688/api/users
 Authorization: Bearer {{token}}
 
 
 ### upload files
+
 POST http://localhost:6688/api/upload
 Authorization: Bearer {{token}}
-Content-Type: multipart/form-data; boundary=Boundary
+Content-Type: multipart/form-data; boundary=MyBoundary
 
---Boundary
-Content-Disposition: form-data; filename="app.yml"
+--MyBoundary
+Content-Disposition: form-data; filename="xdiff1.png"
 Content-Type: application/octet-stream
 
-< ./chat_server/chat.yml
---Boundary
+< /Users/cxn/rust/geektime-rust/aicomm/img.png
+--MyBoundary
 Content-Disposition: form-data; filename="hello.txt"
+Content-Type: text/plain
+
+Hello, World!
+--MyBoundary--
 
 
-### get file hello.txt
-GET http://localhost:6688/api/files/1/c35/419/65321acb48b82be537efafba581c962099.yml
+### get files
+
+GET http://localhost:6688/api/files/1/339/807/e635afbeab088ce33206fdf4223a6bb156.png
 Authorization: Bearer {{token}}
 
+### get files with token
+
+GET http://localhost:6688/api/files/1/339/807/e635afbeab088ce33206fdf4223a6bb156.png?token={{token}}
+
 ### send a message
+
 POST http://localhost:6688/api/chats/1
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -163,5 +180,106 @@ Authorization: Bearer {{token}}
 }
 
 ### get messages
+
 GET http://localhost:6688/api/chats/1/messages?limit=6&last_id=5
 Authorization: Bearer {{token}}
+
+
+### list chat agents
+
+GET http://localhost:6688/api/chats/1/agents
+Authorization: Bearer {{token}}
+
+### create chat agent
+
+POST http://localhost:6688/api/chats/2/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "translator1",
+  "type": "proxy",
+  "adapter": "test",
+  "model": "gpt-4o",
+  "prompt": "You're the world's best translator. You understand English and Chinese well, also their culture and idioms. You will translate user input between English and Chinese. If the original text is English, you will translate it to elegant, authentic Simplified Chinese. If the original text is Chinese, you will translate it to elegant, authentic English. Only return the translated sentences, no other text or comments. below are the text to translate:"
+}
+
+### update chat agent
+
+PATCH http://localhost:6688/api/chats/1/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": 7,
+  "prompt": "You are a helpful assistant",
+  "args": {}
+}
+
+### send a chinese message
+
+POST http://localhost:6688/api/chats/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "你好，今天工作辛苦了",
+  "files": []
+}
+
+### send a english message
+
+POST http://localhost:6688/api/chats/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Well done! You made great progress today.",
+  "files": []
+}
+
+### create a bot
+
+POST http://localhost:6688/api/signup
+Content-Type: application/json
+
+{
+    "workspace": "acme",
+    "fullname": "Her",
+    "email": "her@bot.org",
+    "password": "123456"
+}
+
+### create direct chat
+POST http://localhost:6688/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "members": [1, 4],
+    "public": false
+}
+
+### create chat agent
+
+POST http://localhost:6688/api/chats/5/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "code guru",
+    "type": "reply",
+    "adapter": "ollama",
+    "model": "llama3.2",
+    "prompt": "You will answer questions about code."
+}
+
+### send an event
+
+curl -X POST http://localhost:6690/api/event \
+  -H "Content-Type: application/protobuf" \
+  -H "Authorization: Bearer {{token}}" \
+  -H "X-Country: China" \
+  -H "X-Region: Shanghai" \
+  -H "X-City: Shanghai" \
+  --data-binary @./fixtures/event.bin

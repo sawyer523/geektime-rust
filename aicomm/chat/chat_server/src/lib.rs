@@ -19,11 +19,7 @@ pub use config::AppConfig;
 pub use error::{AppError, ErrorOutput};
 pub use models::*;
 
-use crate::handlers::{
-    create_chat_handler, delete_chat_handler, download_handler, get_chat_handler, index_handler,
-    list_chat_handler, list_chat_user_handler, list_message_handler, send_message_handler,
-    signin_handler, signup_handler, update_chat_handler, upload_handler,
-};
+use crate::handlers::{create_agent_handler, create_chat_handler, delete_chat_handler, download_handler, get_chat_handler, index_handler, list_agent_handler, list_chat_handler, list_chat_user_handler, list_message_handler, send_message_handler, signin_handler, signup_handler, update_agent_handler, update_chat_handler, upload_handler};
 use crate::middlewares::verify_chat;
 use crate::openapi::OpenApiRouter;
 
@@ -33,6 +29,7 @@ mod handlers;
 mod middlewares;
 mod models;
 mod openapi;
+mod agent;
 
 #[derive(Debug, Clone, ToSchema)]
 pub struct AppState {
@@ -55,6 +52,12 @@ pub async fn get_router(state: AppState) -> Result<Router, AppError> {
                 .patch(update_chat_handler)
                 .delete(delete_chat_handler)
                 .post(send_message_handler),
+        )
+        .route(
+            "/:id/agents",
+            get(list_agent_handler)
+                .post(create_agent_handler)
+                .patch(update_agent_handler),
         )
         .route("/:id/messages", get(list_message_handler))
         .layer(from_fn_with_state(state.clone(), verify_chat))

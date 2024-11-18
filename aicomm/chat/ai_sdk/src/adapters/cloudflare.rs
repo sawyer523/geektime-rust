@@ -1,4 +1,4 @@
-use crate::{AiService, Message};
+use crate::{AiAdapter, AiService, Message};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -57,6 +57,12 @@ impl AiService for CloudflareAdapter {
         let response: CloudflareChatCompletionResponse = response.json()
             .await?;
         Ok(response.result.response)
+    }
+}
+
+impl From<CloudflareAdapter> for AiAdapter {
+    fn from(value: CloudflareAdapter) -> Self {
+        AiAdapter::Cloudflare(value)
     }
 }
 

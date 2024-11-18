@@ -1,24 +1,25 @@
 <template>
-  <div class="flex-1 overflow-y-auto p-5 mb-10" ref="messageContainer">
+  <div ref="messageContainer" class="flex-1 overflow-y-auto p-5 mb-10">
     <div v-if="messages.length === 0" class="text-center text-gray-400 mt-5">
       No messages in this channel yet.
     </div>
     <div v-else>
       <div v-for="message in messages" :key="message.id" class="flex items-start mb-5">
-        <img :src="`https://ui-avatars.com/api/?name=${getSender(message.senderId).fullname.replace(' ', '+')}`" class="w-10 h-10 rounded-full mr-3" alt="Avatar" />
+        <img :src="`https://ui-avatars.com/api/?name=${getSender(message.senderId).fullname.replace(' ', '+')}`"
+             alt="Avatar" class="w-10 h-10 rounded-full mr-3"/>
         <div class="max-w-4/5">
           <div class="flex items-center mb-1">
             <span class="font-bold mr-2">{{ getSender(message.senderId).fullname }}</span>
             <span class="text-xs text-gray-500">{{ message.formattedCreatedAt }}</span>
           </div>
-          <div class="text-sm leading-relaxed break-words whitespace-pre-wrap">{{ message.content }}</div>
+          <div class="text-sm leading-relaxed break-words whitespace-pre-wrap">{{ getMessageContent(message) }}</div>
           <div v-if="message.files && message.files.length > 0" class="grid grid-cols-3 gap-2 mt-2">
             <div v-for="(file, index) in message.files" :key="index" class="relative">
               <img
-                :src="getFileUrl(file)"
-                :class="{'h-32 object-cover cursor-pointer': true, 'w-auto h-auto': enlargedImage[message.id]}"
-                @click="toggleImage(message.id)"
-                alt="Uploaded file"
+                  :class="{'h-32 object-cover cursor-pointer': true, 'w-auto h-auto': enlargedImage[message.id]}"
+                  :src="getFileUrl(file)"
+                  alt="Uploaded file"
+                  @click="toggleImage(message.id)"
               />
             </div>
           </div>
@@ -29,7 +30,8 @@
 </template>
 
 <script>
-  import { getUrlBase } from '../utils';
+import {getUrlBase} from '../utils';
+
 export default {
   data() {
     return {
@@ -81,7 +83,19 @@ export default {
     },
     toggleImage(messageId) {
       this.enlargedImage[messageId] = !this.enlargedImage[messageId];
-      this.enlargedImage = { ...this.enlargedImage };
+      this.enlargedImage = {...this.enlargedImage};
+    },
+    getMessageContent(message) {
+      if (!this.$store.state.user) {
+        return '';
+      }
+      if (message.senderId === this.$store.state.user.id) {
+        return message.content;
+      } else {
+        return message.modifiedContent && message.modifiedContent.trim() !== ''
+            ? message.modifiedContent
+            : message.content;
+      }
     }
   },
   mounted() {

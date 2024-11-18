@@ -1,4 +1,4 @@
-use crate::{AiService, Message};
+use crate::{AiAdapter, AiService, Message};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -7,17 +7,20 @@ pub struct OllamaAdapter {
     pub model: String,
     pub client: Client,
 }
+
 #[derive(Serialize)]
 pub struct OllamaChatCompletionRequest {
     pub model: String,
     pub messages: Vec<OllamaMessage>,
     pub stream: bool,
 }
+
 #[derive(Serialize, Deserialize)]
 pub struct OllamaMessage {
     pub role: String,
     pub content: String,
 }
+
 #[derive(Deserialize)]
 pub struct OllamaChatCompletionResponse {
     pub model: String,
@@ -31,6 +34,7 @@ pub struct OllamaChatCompletionResponse {
     pub eval_count: u32,
     pub eval_duration: u64,
 }
+
 impl OllamaAdapter {
     pub fn new(host: impl Into<String>, model: impl Into<String>) -> Self {
         let host = host.into();
@@ -49,6 +53,7 @@ impl Default for OllamaAdapter {
         Self::new_local("llama3.2")
     }
 }
+
 impl AiService for OllamaAdapter {
     async fn complete(&self, messages: &[Message]) -> anyhow::Result<String> {
         let request = OllamaChatCompletionRequest {
@@ -64,11 +69,19 @@ impl AiService for OllamaAdapter {
         Ok(response.message.content)
     }
 }
+
+impl From<OllamaAdapter> for AiAdapter {
+    fn from(value: OllamaAdapter) -> Self {
+        AiAdapter::Ollama(value)
+    }
+}
+
 impl From<Message> for OllamaMessage {
     fn from(message: Message) -> Self {
         OllamaMessage { role: message.role.to_string(), content: message.content }
     }
 }
+
 impl From<&Message> for OllamaMessage {
     fn from(message: &Message) -> Self {
         OllamaMessage { role: message.role.to_string(), content: message.content.clone() }

@@ -9,7 +9,7 @@ use tower_http::{
 };
 use tracing::Level;
 
-pub use auth::verify_token;
+pub use auth::{extract_user, verify_token};
 use request_id::set_request_id;
 use service_time::ServiceTimeLayer;
 
@@ -38,7 +38,7 @@ pub fn set_layer(app: Router) -> Router {
                     .latency_unit(LatencyUnit::Micros),
             ),
     )
-        .layer(CompressionLayer::new().gzip(true).br(true).deflate(true))
-        .layer(from_fn(set_request_id))
-        .layer(ServiceTimeLayer)
+    .layer(CompressionLayer::new().gzip(true).br(true).deflate(true))
+    .layer(from_fn(set_request_id))
+    .layer(ServiceTimeLayer)
 }

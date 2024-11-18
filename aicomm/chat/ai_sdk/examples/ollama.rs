@@ -1,8 +1,8 @@
-use ai_sdk::{AiService, Message, OllamaAdapter, Role};
+use ai_sdk::{AiService, CloudflareAdapter, Message, OllamaAdapter, Role};
 use std::env;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     let adapter = OllamaAdapter::default();
     let messages = vec![Message { role: Role::User, content: "世界上最长的河流是什么？".to_string() }];
     let response = adapter.complete(&messages).await.unwrap();
@@ -13,4 +13,5 @@ async fn main() {
     let messages = vec![Message { role: Role::User, content: "hello".to_string() }];
     let response = adapter.complete(&messages).await.unwrap();
     println!("response: {}", response);
+    Ok(())
 }

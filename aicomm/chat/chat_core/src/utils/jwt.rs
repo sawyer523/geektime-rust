@@ -61,8 +61,8 @@ impl Deref for DecodingKey {
 mod tests {
     use anyhow::Result;
 
-    use super::*;
     use super::User;
+    use super::*;
 
     #[tokio::test]
     async fn jwt_sing_verify_should_work() -> Result<()> {

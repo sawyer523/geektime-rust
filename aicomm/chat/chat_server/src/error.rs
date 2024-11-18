@@ -1,7 +1,8 @@
 use axum::body::Body;
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
+use chat_core::AgentError;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
@@ -32,6 +33,15 @@ pub enum AppError {
     #[error("{0}")]
     ChatFileError(String),
 
+    #[error("create agent error: {0}")]
+    CreateAgentError(String),
+
+    #[error("update agent error: {0}")]
+    UpdateAgentError(String),
+
+    #[error("user {user_id} is not member of chat {chat_id}")]
+    NotChatMemberError { user_id: u64, chat_id: u64 },
+
     #[error("create message error: {0}")]
     CreateMessageError(String),
 
@@ -49,6 +59,9 @@ pub enum AppError {
 
     #[error("http header parse error: {0}")]
     HttpHeaderError(#[from] axum::http::header::InvalidHeaderValue),
+
+    #[error("ai agent error: {0}")]
+    AiAgentError(#[from] AgentError),
 }
 
 impl ErrorOutput {
@@ -68,12 +81,16 @@ impl IntoResponse for AppError {
             Self::HttpHeaderError(_) => StatusCode::UNPROCESSABLE_ENTITY,
             Self::EmailAlreadyExists(_) => StatusCode::CONFLICT,
             Self::CreateChatError(_) => StatusCode::BAD_REQUEST,
+            Self::CreateAgentError(_) => StatusCode::BAD_REQUEST,
+            Self::UpdateAgentError(_) => StatusCode::BAD_REQUEST,
+            Self::NotChatMemberError { .. } => StatusCode::FORBIDDEN,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::PermissionDenied(_) => StatusCode::FORBIDDEN,
             Self::UpdateChatError(_) => StatusCode::BAD_REQUEST,
             Self::IoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::CreateMessageError(_) => StatusCode::BAD_REQUEST,
             Self::ChatFileError(_) => StatusCode::BAD_REQUEST,
+            Self::AiAgentError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, Json(json!({"error": self.to_string() }))).into_response()
     }

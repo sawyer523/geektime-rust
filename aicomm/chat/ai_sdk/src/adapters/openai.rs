@@ -1,9 +1,9 @@
-use crate::{AiService, Message};
+use crate::{AiAdapter, AiService, Message};
 use anyhow::anyhow;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-pub struct OpenAIAdapter {
+pub struct OpenaiAdapter {
     host: String,
     api_key: String,
     model: String,
@@ -11,55 +11,55 @@ pub struct OpenAIAdapter {
 }
 
 #[derive(Serialize)]
-pub struct OpenAIChatCompletionRequest {
+pub struct OpenaiChatCompletionRequest {
     pub model: String,
-    pub messages: Vec<OpenAIMessage>,
+    pub messages: Vec<OpenaiMessage>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct OpenAIMessage {
+pub struct OpenaiMessage {
     pub role: String,
     pub content: String,
 }
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct OpenAIChatCompletionResponse {
+pub struct OpenaiChatCompletionResponse {
     pub id: String,
     pub object: String,
     pub created: u64,
     pub model: String,
     pub system_fingerprint: String,
-    pub choices: Vec<OpenAIChoice>,
-    pub usage: OpenAIUsage,
+    pub choices: Vec<OpenaiChoice>,
+    pub usage: OpenaiUsage,
 }
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct OpenAIChoice {
+pub struct OpenaiChoice {
     pub index: u32,
-    pub message: OpenAIMessage,
+    pub message: OpenaiMessage,
     pub logprobs: Option<i64>,
     pub finish_reason: String,
 }
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct OpenAIUsage {
+pub struct OpenaiUsage {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
     pub total_tokens: u32,
-    pub completion_tokens_details: Option<OpenAICompletionTokensDetails>,
+    pub completion_tokens_details: Option<OpenaiCompletionTokensDetails>,
 }
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct OpenAICompletionTokensDetails {
+pub struct OpenaiCompletionTokensDetails {
     pub reasoning_tokens: u32,
 }
 
-impl OpenAIAdapter {
+impl OpenaiAdapter {
     pub fn deafult(api_key: impl Into<String>, model: impl Into<String>) -> Self {
         Self::new("", api_key, model)
     }
@@ -78,11 +78,11 @@ impl OpenAIAdapter {
     }
 }
 
-impl AiService for OpenAIAdapter {
+impl AiService for OpenaiAdapter {
     async fn complete(&self, messages: &[Message]) -> anyhow::Result<String> {
-        let req = OpenAIChatCompletionRequest {
+        let req = OpenaiChatCompletionRequest {
             model: self.model.clone(),
-            messages: messages.iter().map(OpenAIMessage::from).collect(),
+            messages: messages.iter().map(OpenaiMessage::from).collect(),
         };
         let url = format!("{}/chat/completions", self.host);
         let res = self
@@ -93,13 +93,19 @@ impl AiService for OpenAIAdapter {
             .send()
             .await?;
 
-        let mut response: OpenAIChatCompletionResponse = res.json().await?;
+        let mut response: OpenaiChatCompletionResponse = res.json().await?;
         let content = response.choices.pop().ok_or(anyhow!("No response"))?.message.content;
         Ok(content)
     }
 }
 
-impl From<Message> for OpenAIMessage {
+impl From<OpenaiAdapter> for AiAdapter {
+    fn from(value: OpenaiAdapter) -> Self {
+        AiAdapter::Openai(value)
+    }
+}
+
+impl From<Message> for OpenaiMessage {
     fn from(msg: Message) -> Self {
         Self {
             role: msg.role.to_string(),
@@ -108,7 +114,7 @@ impl From<Message> for OpenAIMessage {
     }
 }
 
-impl From<&Message> for OpenAIMessage {
+impl From<&Message> for OpenaiMessage {
     fn from(msg: &Message) -> Self {
         Self {
             role: msg.role.to_string(),
@@ -119,7 +125,7 @@ impl From<&Message> for OpenAIMessage {
 
 #[cfg(test)]
 mod tests {
-    use crate::adapters::OpenAIAdapter;
+    use crate::adapters::OpenaiAdapter;
     use crate::{AiService, Message, Role};
     use anyhow::Result;
     use std::env;
@@ -130,12 +136,13 @@ mod tests {
         // get the api key from system environment
         let api_key = env::var("OPENAI_API_KEY")?;
         let host = "https://vip.apiyi.com/v1";
-        let adapter = OpenAIAdapter::new(host, api_key, "gpt-4o-mini");
+        let adapter = OpenaiAdapter::new(host, api_key, "gpt-4o-mini");
         let message = vec![Message {
             role: Role::User,
             content: "hello chat".to_string(),
         }];
         let response = adapter.complete(&message).await?;
+        println!("response: {}", response);
         Ok(())
     }
 }

@@ -31,9 +31,9 @@ impl AppState {
             "SELECT id, ws_id, fullname, email, created_at FROM users WHERE email = \
             $1",
         )
-        .bind(email)
-        .fetch_optional(&self.pool)
-        .await?;
+            .bind(email)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(user)
     }
@@ -44,9 +44,9 @@ impl AppState {
             "SELECT id, ws_id, fullname, email, created_at FROM users WHERE id = \
             $1",
         )
-        .bind(id)
-        .fetch_optional(&self.pool)
-        .await?;
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(user)
     }
@@ -57,9 +57,9 @@ impl AppState {
             "SELECT id, ws_id, fullname, email, password_hash, created_at FROM users WHERE email = \
             $1",
         )
-        .bind(&input.email)
-        .fetch_optional(&self.pool)
-        .await?;
+            .bind(&input.email)
+            .fetch_optional(&self.pool)
+            .await?;
         match user {
             Some(mut user) => {
                 let password_hash = mem::take(&mut user.password_hash);
@@ -91,19 +91,22 @@ impl AppState {
         };
 
         let password_hash = hash_password(&input.password)?;
+
+        let is_bot = input.email.ends_with("@bot.org");
         let mut user = sqlx::query_as::<_, User>(
             r#"
-            INSERT INTO users (ws_id, email,fullname, password_hash)
-            VALUES ($1, $2, $3, $4)
-            RETURNING id, ws_id, fullname, email, created_at
+            INSERT INTO users (ws_id, email,fullname, password_hash, is_bot)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, ws_id, fullname, email, is_bot, created_at
             "#,
         )
-        .bind(ws.id)
-        .bind(&input.email)
-        .bind(&input.fullname)
-        .bind(password_hash)
-        .fetch_one(&self.pool)
-        .await?;
+            .bind(ws.id)
+            .bind(&input.email)
+            .bind(&input.fullname)
+            .bind(password_hash)
+            .bind(is_bot)
+            .fetch_one(&self.pool)
+            .await?;
 
         user.ws_name = ws.name.clone();
 
@@ -122,9 +125,9 @@ impl AppState {
             WHERE id = ANY($1)
             "#,
         )
-        .bind(ids)
-        .fetch_all(&self.pool)
-        .await?;
+            .bind(ids)
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(users)
     }
